@@ -1,98 +1,355 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { TopBar } from '@/components/auth/TopBar';
+import { AuthColors, AuthSpacing } from '@/constants/authColors';
 
-export default function HomeScreen() {
+function QuickMenu({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress?: () => void;
+}) {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <Pressable style={styles.quickMenuItem} onPress={onPress}>
+      <View style={styles.quickMenuIconWrap}>
+        <Ionicons name={icon} size={20} color={AuthColors.primary} />
+      </View>
+      <Text style={styles.quickMenuText}>{label}</Text>
+    </Pressable>
+  );
+}
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+function RecentCard({
+  ticker,
+  title,
+  quantity,
+  amount,
+}: {
+  ticker: string;
+  title: string;
+  quantity: string;
+  amount: string;
+}) {
+  return (
+    <View style={styles.recentCard}>
+      <View style={styles.recentTickerWrap}>
+        <Text style={styles.recentTicker}>{ticker}</Text>
+      </View>
+      <View style={styles.recentInfo}>
+        <Text style={styles.recentTitle}>{title}</Text>
+        <Text style={styles.recentQuantity}>{quantity}</Text>
+      </View>
+      <Text style={styles.recentAmount}>{amount}</Text>
+    </View>
+  );
+}
+
+export default function CardHomeScreen() {
+  return (
+    <View style={styles.container}>
+      <TopBar title="카드" showBack={false} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.cardHero}>
+          <View style={styles.cardStripe} />
+          <Text style={styles.cardHeroLabel}>WON 자동투자 카드</Text>
+          <Text style={styles.cardHeroNumber}>**** **** **** 1234</Text>
+          <Text style={styles.cardHeroSub}>VISA Platinum · 김우리</Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>5월 이용금액</Text>
+        <View style={styles.monthCard}>
+          <Text style={styles.monthCardLabel}>총 이용금액</Text>
+          <Text style={styles.monthCardValue}>1,245,000원</Text>
+          <View style={styles.monthDivider} />
+          <Text style={styles.monthCardLabel}>적립률 구간</Text>
+          <Text style={styles.monthCardSubValue}>50~150만원 · 1.0% 적용</Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>자주 쓰는 메뉴</Text>
+        <View style={styles.quickGrid}>
+          <QuickMenu icon="card-outline" label="결제 내역" onPress={() => router.push('/card-reward')} />
+          <QuickMenu icon="pie-chart-outline" label="전월 실적" onPress={() => router.push('/card-reward-detail')} />
+          <QuickMenu icon="sparkles-outline" label="혜택" onPress={() => router.push('/card-create')} />
+          <QuickMenu icon="checkbox-outline" label="리워드" onPress={() => router.push('/card-reward')} />
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>최근 결제</Text>
+          <Pressable onPress={() => router.push('/card-reward')}>
+            <Text style={styles.linkText}>전체보기 ›</Text>
+          </Pressable>
+        </View>
+
+        <RecentCard ticker="QQQ" title="나스닥 100 ETF" quantity="0.0241주" amount="16,280원" />
+        <RecentCard ticker="QQQ" title="나스닥 100 ETF" quantity="0.0241주" amount="16,280원" />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: AuthColors.white,
+  },
+  content: {
+    paddingHorizontal: AuthSpacing.lg,
+    paddingBottom: 28,
+  },
+  cardHero: {
+    marginTop: 32,
+    height: 200,
+    borderRadius: 18,
+    backgroundColor: '#2f6bff',
+    padding: 20,
+  },
+  cardStripe: {
+    width: 36,
+    height: 26,
+    borderRadius: 4,
+    backgroundColor: '#f5d76e',
+    marginBottom: 48,
+  },
+  cardHeroLabel: {
+    fontSize: 12,
+    color: AuthColors.white,
+    marginBottom: 10,
+  },
+  cardHeroNumber: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: AuthColors.white,
+    marginBottom: 10,
+  },
+  cardHeroSub: {
+    fontSize: 11,
+    color: AuthColors.white,
+  },
+  sectionTitle: {
+    marginTop: 20,
+    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: '700',
+    color: AuthColors.textBlack,
+  },
+  monthCard: {
+    borderWidth: 1,
+    borderColor: AuthColors.borderDarkGray,
+    borderRadius: 16,
+    padding: 18,
+  },
+  monthCardLabel: {
+    fontSize: 12,
+    color: AuthColors.textGray,
+  },
+  monthCardValue: {
+    marginTop: 8,
+    fontSize: 20,
+    fontWeight: '700',
+    color: AuthColors.textBlack,
+  },
+  monthDivider: {
+    height: 1,
+    backgroundColor: AuthColors.borderGray,
+    marginVertical: 12,
+  },
+  monthCardSubValue: {
+    fontSize: 12,
+    color: AuthColors.primary,
+    textAlign: 'right',
+  },
+  quickGrid: {
+    marginTop: 4,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  quickMenuItem: {
+    flex: 1,
+    minHeight: 84,
+    borderWidth: 1,
+    borderColor: AuthColors.borderDarkGray,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    gap: 10,
+  },
+  quickMenuIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickMenuText: {
+    fontSize: 12,
+    color: AuthColors.textBlack,
+    textAlign: 'center',
+  },
+  sectionHeader: {
+    marginTop: 20,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 13,
+    color: AuthColors.primary,
+    fontWeight: '700',
+  },
+  moneyCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: AuthColors.borderDarkGray,
+    borderRadius: 14,
+    padding: 14,
+    minHeight: 84,
+  },
+  moneyCardTitle: {
+    fontSize: 12,
+    color: AuthColors.textGray,
+  },
+  moneyCardAmount: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    color: AuthColors.textBlack,
+  },
+  moneyCardNote: {
+    marginTop: 10,
+    fontSize: 12,
+    color: AuthColors.textGray,
+  },
+  balanceCard: {
+    marginTop: 32,
+    borderWidth: 1,
+    borderColor: AuthColors.borderDarkGray,
+    borderRadius: 18,
+    padding: 18,
+    backgroundColor: AuthColors.white,
+  },
+  balanceTitle: {
+    fontSize: 14,
+    color: AuthColors.textGray,
+  },
+  balanceAmount: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: AuthColors.textBlack,
+    marginTop: 8,
+  },
+  balanceDelta: {
+    fontSize: 12,
+    color: AuthColors.textGray,
+    marginTop: 6,
+  },
+  accountCard: {
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: AuthColors.borderDarkGray,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  accountLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  accountIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-});
+  accountTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: AuthColors.textBlack,
+  },
+  accountSub: {
+    marginTop: 4,
+    fontSize: 12,
+    color: AuthColors.textGray,
+  },
+  twoCards: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  listHeader: {
+                  marginTop: 18,
+                  paddingVertical: 14,
+                  borderWidth: 1,
+                  borderColor: AuthColors.borderDarkGray,
+                  borderRadius: 14,
+                  paddingHorizontal: 16,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                },
+                listHeaderTitle: {
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: AuthColors.textBlack,
+                },
+                recentList: {
+                  marginTop: 12,
+                  gap: 12,
+                },
+                recentCard: {
+                  borderWidth: 1,
+                  borderColor: AuthColors.borderDarkGray,
+                  borderRadius: 16,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                },
+                recentTickerWrap: {
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                  backgroundColor: '#eff6ff',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+                recentTicker: {
+                  fontSize: 12,
+                  fontWeight: '700',
+                  color: '#2563eb',
+                },
+                recentInfo: {
+                  flex: 1,
+                  gap: 4,
+                },
+                recentTitle: {
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: AuthColors.textBlack,
+                },
+                recentQuantity: {
+                  fontSize: 12,
+                  color: AuthColors.textGray,
+                },
+                recentAmount: {
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: AuthColors.textBlack,
+                },
+                linkOnly: {
+                  alignSelf: 'flex-end',
+                  marginTop: 12,
+                },
+              });
