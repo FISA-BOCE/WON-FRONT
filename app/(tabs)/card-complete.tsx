@@ -89,8 +89,9 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 48,
-    ...AuthTypography.heading1,
-    color: AuthColors.textBlack,
+    fontSize: 22,
+    fontWeight: '700',
+    color: AuthColors.gray900,
     textAlign: 'center',
   },
   subtitle: {

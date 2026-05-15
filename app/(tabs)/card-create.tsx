@@ -62,14 +62,16 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   title: {
-    marginTop: AuthSpacing.default,
-    ...AuthTypography.heading1,
-    color: AuthColors.textBlack,
+    fontSize: 22,
+    fontWeight: '700',
+    color: AuthColors.gray900,
+    marginTop: AuthSpacing.default
   },
   subtitle: {
-    marginTop: AuthSpacing.xs,
-    ...AuthTypography.body,
-    color: AuthColors.gray500,
+    fontSize: 14,
+    fontWeight: '700',
+    color: AuthColors.gray700,
+    marginTop: 8
   },
   cardPreview: {
     marginTop: AuthSpacing.default,

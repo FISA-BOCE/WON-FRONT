@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
-import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
+import { AuthColors, AuthSpacing } from '@/constants/authColors';
 
 type ETFItem = {
   name: string;
@@ -156,15 +156,17 @@ const styles = StyleSheet.create({
     backgroundColor: AuthColors.blue200,
   },
   title: {
-    marginTop: AuthSpacing.lg,
-    ...AuthTypography.heading1,
-    color: AuthColors.textBlack,
+    fontSize: 22,
+    fontWeight: '700',
+    color: AuthColors.gray900,
+    marginTop: AuthSpacing.default
   },
   subtitle: {
-    marginTop: AuthSpacing.xs,
-    ...AuthTypography.body,
-    color: AuthColors.textGray,
-    marginBottom: 40,
+    fontSize: 14,
+    fontWeight: '700',
+    color: AuthColors.gray700,
+    marginTop: 8,
+    marginBottom: AuthSpacing.xl
   },
   searchBox: {
     width: '100%',

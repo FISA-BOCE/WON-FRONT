@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { TopBar } from '@/components/auth/TopBar';
-import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
+import { AuthColors, AuthSpacing } from '@/constants/authColors';
 
 const initial = {
   name: '',
@@ -124,10 +124,10 @@ const styles = StyleSheet.create({
     backgroundColor: AuthColors.blue200,
   },
   title: {
-    marginTop: AuthSpacing.lg,
-    marginBottom: AuthSpacing.lg,
-    ...AuthTypography.heading1,
-    color: AuthColors.textBlack,
+    fontSize: 22,
+    fontWeight: '700',
+    color: AuthColors.gray900,
+    marginVertical: AuthSpacing.default
   },
   helperBox: {
     marginTop: 8,
