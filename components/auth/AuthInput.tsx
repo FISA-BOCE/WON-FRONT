@@ -1,6 +1,6 @@
-import { StyleSheet, TextInput, View, ViewProps, Text, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, TextInput, View, ViewProps } from 'react-native';
 
 interface AuthInputProps extends Omit<TextInput['props'], 'style'> {
   label?: string;
