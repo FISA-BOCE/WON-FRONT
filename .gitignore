@@ -43,3 +43,6 @@ app-example
 /android
 
 AGENTS.md
+
+.expo
+.vscode
