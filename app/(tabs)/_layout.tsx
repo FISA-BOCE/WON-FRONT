@@ -17,6 +17,7 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}
     >
+      <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen
         name="card"
         options={{
@@ -45,6 +46,7 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="card-create" options={{ href: null }} />
       <Tabs.Screen name="card-application" options={{ href: null }} />
       <Tabs.Screen name="card-terms" options={{ href: null }} />
@@ -58,8 +60,8 @@ export default function TabLayout() {
       <Tabs.Screen name="card-monthly-usage" options={{ href: null }} />
       <Tabs.Screen name="card-home-empty" options={{ href: null }} />
       <Tabs.Screen name="securities-no-account" options={{ href: null }} />
-      <Tabs.Screen name="securities-account-open-step1" options={{ href: null }} />
-      <Tabs.Screen name="securities-account-open-step2" options={{ href: null }} />
+      <Tabs.Screen name="invest-account-create-1" options={{ href: null }} />
+      <Tabs.Screen name="invest-account-create-2" options={{ href: null }} />
       <Tabs.Screen name="securities-complete" options={{ href: null }} />
       <Tabs.Screen name="etf-history" options={{ href: null }} />
       <Tabs.Screen name="etf-change" options={{ href: null }} />
