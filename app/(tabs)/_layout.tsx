@@ -58,10 +58,10 @@ export default function TabLayout() {
       <Tabs.Screen name="card-monthly-performance" options={{ href: null }} />
       <Tabs.Screen name="card-monthly-usage" options={{ href: null }} />
       <Tabs.Screen name="card-home-empty" options={{ href: null }} />
-      <Tabs.Screen name="securities-no-account" options={{ href: null }} />
+      <Tabs.Screen name="invest-no-account" options={{ href: null }} />
       <Tabs.Screen name="invest-account-create-1" options={{ href: null }} />
       <Tabs.Screen name="invest-account-create-2" options={{ href: null }} />
-      <Tabs.Screen name="securities-complete" options={{ href: null }} />
+      <Tabs.Screen name="invest-complete" options={{ href: null }} />
       <Tabs.Screen name="etf-history" options={{ href: null }} />
       <Tabs.Screen name="etf-change" options={{ href: null }} />
       <Tabs.Screen name="etf-reward" options={{ href: null }} />
