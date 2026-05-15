@@ -46,7 +46,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="card-create" options={{ href: null }} />
       <Tabs.Screen name="card-application" options={{ href: null }} />
       <Tabs.Screen name="card-terms" options={{ href: null }} />
