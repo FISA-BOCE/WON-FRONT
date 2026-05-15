@@ -1,6 +1,6 @@
-import { TopBar } from '@/components/auth/TopBar';
 import { AuthButton } from '@/components/auth/AuthButton';
-import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
+import { TopBar } from '@/components/auth/TopBar';
+import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -103,20 +103,22 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: AuthSpacing.lg,
-    paddingBottom: 32,
+    paddingBottom: 40,
     marginTop: AuthSpacing.default,
   },
   title: {
-    ...AuthTypography.heading1,
-    color: AuthColors.textBlack,
+    fontSize: 22,
+    fontWeight: '700',
+    color: AuthColors.gray900,
   },
   subtitle: {
-    marginTop: 6,
-    ...AuthTypography.body,
-    color: AuthColors.gray500,
+    fontSize: 14,
+    fontWeight: '700',
+    color: AuthColors.gray700,
+    marginTop: 8,
   },
   stepCard: {
-    marginTop: 48,
+    marginTop: 24,
     borderRadius: 16,
     backgroundColor: AuthColors.gray50,
     paddingHorizontal: 20,
@@ -207,6 +209,6 @@ const styles = StyleSheet.create({
     color: AuthColors.textBlack,
   },
   footerSpacing: {
-    height: 126,
+    height: 80,
   },
 });

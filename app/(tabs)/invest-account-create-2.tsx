@@ -1,6 +1,6 @@
-import { TopBar } from '@/components/auth/TopBar';
 import { AuthButton } from '@/components/auth/AuthButton';
-import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
+import { TopBar } from '@/components/auth/TopBar';
+import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { EMAIL_REGEX } from '@/constants/validation';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -197,7 +197,8 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 2,
-    ...AuthTypography.heading1,
+    fontSize: 22,
+    fontWeight: '700',
     color: AuthColors.textBlack,
   },
   formSection: {
