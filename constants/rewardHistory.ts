@@ -44,7 +44,7 @@ export const REWARD_HISTORY: RewardHistoryItem[] = [
     ticker: 'QQQ',
     status: '미적용',
     summaryTitle: '2026년 4월 실적',
-    summaryLabel: '이용 금액',
+    summaryLabel: '리워드 금액',
     summaryAmount: '20,000원',
     summaryBadge: '미적용',
     detailRows: [
