@@ -65,7 +65,6 @@ export default function CardRewardHistoryScreen() {
                     styles.statusBadge,
                     item.status === '적립' && styles.statusEarned,
                     item.status === '미적용' && styles.statusMissed,
-                    item.status === '보류' && styles.statusPending,
                   ]}
                 >
                   <Text
@@ -73,7 +72,6 @@ export default function CardRewardHistoryScreen() {
                       styles.statusText,
                       item.status === '적립' && styles.statusTextEarned,
                       item.status === '미적용' && styles.statusTextMissed,
-                      item.status === '보류' && styles.statusTextPending,
                     ]}
                   >
                     {item.status}
@@ -209,9 +207,6 @@ const styles = StyleSheet.create({
   statusMissed: {
     backgroundColor: 'rgba(255,103,77,0.2)',
   },
-  statusPending: {
-    backgroundColor: 'rgba(255,224,102,0.2)',
-  },
   statusText: {
     fontSize: 11,
     fontWeight: '700',
@@ -222,8 +217,5 @@ const styles = StyleSheet.create({
   },
   statusTextMissed: {
     color: AuthColors.error,
-  },
-  statusTextPending: {
-    color: '#B69100',
   },
 });

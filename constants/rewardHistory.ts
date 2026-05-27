@@ -1,4 +1,4 @@
-export type RewardFilter = '전체' | '적립' | '미적용' | '보류';
+export type RewardFilter = '전체' | '적립' | '미적용';
 
 export type RewardHistoryItem = {
   id: string;
@@ -16,7 +16,7 @@ export type RewardHistoryItem = {
   extraReasonLines?: string[];
 };
 
-export const REWARD_FILTERS: RewardFilter[] = ['전체', '적립', '미적용', '보류'];
+export const REWARD_FILTERS: RewardFilter[] = ['전체', '적립', '미적용'];
 
 export const REWARD_HISTORY: RewardHistoryItem[] = [
   {
@@ -55,22 +55,5 @@ export const REWARD_HISTORY: RewardHistoryItem[] = [
     ],
     reasonTitle: '다른 미적용 사유',
     reasonLines: ['출금 실패 — 결제대금 출금이 정상 처리되지 않은 경우', '환전 실패 — 환전 가능 시간 외 또는 환전 한도 초과'],
-  },
-  {
-    id: '2026-03-pending',
-    date: '2026년 03월',
-    amount: '12,450원',
-    ticker: 'QQQ',
-    status: '보류',
-    summaryTitle: '2026년 3월 실적',
-    summaryLabel: '심사 상태',
-    summaryAmount: '보류',
-    summaryBadge: '보류',
-    detailRows: [
-      { label: '보류 사유', value: '결제/환전 정합성 점검 중' },
-      { label: '처리 예정', value: '영업일 기준 1~2일 내 확정' },
-    ],
-    reasonTitle: '안내',
-    reasonLines: ['상세 심사 로직은 표시하지 않습니다.'],
   },
 ];
