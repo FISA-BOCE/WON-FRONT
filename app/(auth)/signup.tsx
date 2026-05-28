@@ -180,6 +180,10 @@ export default function SignupScreen() {
             error={errors.phoneNumber}
             keyboardType="number-pad"
             maxLength={11}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
             rightButton={{
               label: phoneVerified ? '확인됨' : '중복확인',
               onPress: handlePhoneVerify,
@@ -192,6 +196,10 @@ export default function SignupScreen() {
             value={form.name}
             onChangeText={(text) => handleInputChange('name', text)}
             error={errors.name}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
           />
 
           <AuthInput
@@ -203,6 +211,10 @@ export default function SignupScreen() {
             showPasswordToggle={true}
             isPasswordVisible={showPassword}
             onPasswordToggle={() => setShowPassword(!showPassword)}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
           />
 
           <AuthInput
@@ -214,6 +226,10 @@ export default function SignupScreen() {
             showPasswordToggle={true}
             isPasswordVisible={showPasswordConfirm}
             onPasswordToggle={() => setShowPasswordConfirm(!showPasswordConfirm)}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
           />
 
           <AuthInput
@@ -224,6 +240,10 @@ export default function SignupScreen() {
             error={errors.email}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
           />
         </View>
 
