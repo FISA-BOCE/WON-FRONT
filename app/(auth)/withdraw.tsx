@@ -1,14 +1,17 @@
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { withdrawUser } from '@/hooks/userApi';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function WithdrawScreen() {
   const [expanded, setExpanded] = useState(false);
   const [selectedReason, setSelectedReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reasons = useMemo(
     () => [
@@ -18,6 +21,27 @@ export default function WithdrawScreen() {
     ],
     [],
   );
+
+  const handleWithdraw = async () => {
+    if (!selectedReason || isSubmitting) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await withdrawUser();
+      Alert.alert('회원 탈퇴 완료', '회원 탈퇴가 완료되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => router.replace('/login'),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert('회원 탈퇴 실패', extractApiErrorMessage(error, '회원 탈퇴 중 문제가 발생했습니다.'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -85,8 +109,9 @@ export default function WithdrawScreen() {
         <View style={styles.buttonWrap}>
           <AuthButton
             title="탈퇴하기"
-            onPress={() => selectedReason && router.replace('/login')}
+            onPress={handleWithdraw}
             variant="danger"
+            disabled={!selectedReason || isSubmitting}
             style={{
               opacity: selectedReason ? 1 : 0.5,
             }}

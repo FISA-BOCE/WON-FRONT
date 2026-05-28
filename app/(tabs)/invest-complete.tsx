@@ -1,6 +1,6 @@
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
-import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
+import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -20,7 +20,7 @@ export default function SecuritiesCompleteScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.successIcon}>
-          <Ionicons name="checkmark" size={54} color={AuthColors.blue300} />
+                  <Ionicons name="checkmark" size={34} color={AuthColors.white} />
         </View>
 
         <Text style={styles.title}>계좌 개설이 완료되었습니다!</Text>
@@ -53,19 +53,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successIcon: {
-    marginTop: 108,
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    borderWidth: 3,
-    borderColor: AuthColors.blue300,
+    marginTop: 60,
+    width: 72,
+    height: 72,
+    borderRadius: 999,
+    backgroundColor: AuthColors.blue300,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     marginTop: 54,
-    ...AuthTypography.heading1,
-    color: AuthColors.textBlack,
+    fontWeight: '700',
+    fontSize: 22,
+    color: AuthColors.gray800,
     textAlign: 'center',
   },
   summaryCard: {

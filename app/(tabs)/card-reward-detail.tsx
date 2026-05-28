@@ -13,7 +13,6 @@ export default function CardRewardDetailScreen() {
   const rewardId = Array.isArray(params.id) ? params.id[0] : params.id;
   const detail = REWARD_HISTORY.find((item) => item.id === rewardId) ?? REWARD_HISTORY[0];
   const isNotMet = detail.status === '미적용';
-  const isPending = detail.status === '보류';
 
   return (
     <View style={styles.container}>
@@ -29,7 +28,6 @@ export default function CardRewardDetailScreen() {
               styles.statusPill,
               detail.status === '적립' && styles.statusPillEarned,
               detail.status === '미적용' && styles.statusPillMissed,
-              detail.status === '보류' && styles.statusPillPending,
             ]}
           >
             <Text
@@ -37,7 +35,6 @@ export default function CardRewardDetailScreen() {
                 styles.statusPillText,
                 detail.status === '적립' && styles.statusPillTextEarned,
                 detail.status === '미적용' && styles.statusPillTextMissed,
-                detail.status === '보류' && styles.statusPillTextPending,
               ]}
             >
               {detail.summaryBadge}
@@ -55,7 +52,7 @@ export default function CardRewardDetailScreen() {
                 <Text
                   style={[
                     styles.detailValue,
-                    row.highlight && (isPending ? styles.highlightPending : styles.highlightValue),
+                    row.highlight && styles.highlightValue,
                   ]}
                 >
                   {row.value}
@@ -108,7 +105,7 @@ export default function CardRewardDetailScreen() {
                 <Text
                   key={`reason-${idx}`}
                   style={[
-                    isPending ? styles.explanationText : styles.explanationMain,
+                    styles.explanationMain,
                     isNotMet && styles.explanationTextNotMet,
                   ]}
                 >
@@ -125,10 +122,6 @@ export default function CardRewardDetailScreen() {
             </View>
           </>
         ) : null}
-
-        <View style={styles.noticeBox}>
-          <Text style={styles.noticeText}>상세 심사 로직은 표시하지 않습니다.</Text>
-        </View>
 
         <View style={styles.bottomGap} />
         <AuthButton title="확인" onPress={() => router.push('/card-reward-history')} />
@@ -186,17 +179,11 @@ const styles = StyleSheet.create({
   statusPillMissed: {
     backgroundColor: 'rgba(255,103,77,0.2)',
   },
-  statusPillPending: {
-    backgroundColor: 'rgba(255,224,102,0.2)',
-  },
   statusPillTextEarned: {
     color: AuthColors.success,
   },
   statusPillTextMissed: {
     color: AuthColors.error,
-  },
-  statusPillTextPending: {
-    color: '#B69100',
   },
   sectionTitle: {
     marginTop: 60,
@@ -231,10 +218,6 @@ const styles = StyleSheet.create({
   },
   highlightValue: {
     color: '#d97706',
-    fontWeight: '700',
-  },
-  highlightPending: {
-    color: '#B69100',
     fontWeight: '700',
   },
   divider: {
@@ -296,17 +279,6 @@ const styles = StyleSheet.create({
   },
   explanationTextNotMet: {
     color: AuthColors.gray600,
-  },
-  noticeBox: {
-    marginTop: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    padding: 14,
-  },
-  noticeText: {
-    fontSize: 12,
-     color: AuthColors.gray500
   },
   bottomGap: {
     height: 20,
