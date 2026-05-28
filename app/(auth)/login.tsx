@@ -53,7 +53,7 @@ export default function LoginScreen({ route }: any) {
     try {
       setIsSubmitting(true);
       await login(phoneNumber.trim(), password.trim());
-      router.replace('/profile');
+      router.replace('/card');
     } catch (error) {
       Alert.alert('로그인 실패', extractApiErrorMessage(error, '로그인 중 문제가 발생했습니다.'));
     } finally {
@@ -102,6 +102,10 @@ export default function LoginScreen({ route }: any) {
             error={errors.phone}
             keyboardType="number-pad"
             maxLength={11}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
           />
           
           <AuthInput
@@ -116,6 +120,10 @@ export default function LoginScreen({ route }: any) {
             }}
             error={errors.password}
             secureTextEntry
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
+            spellCheck={false}
           />
         </View>
 
