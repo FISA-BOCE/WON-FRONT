@@ -3,18 +3,21 @@ import { AuthInput } from '@/components/auth/AuthInput';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { EMAIL_REGEX } from '@/constants/validation';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { signup } from '@/hooks/authApi';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
+  Alert,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SignupForm {
   phoneNumber: string;
@@ -35,6 +38,7 @@ interface SignupErrors {
 }
 
 export default function SignupScreen() {
+  const insets = useSafeAreaInsets();
   const [form, setForm] = useState<SignupForm>({
     phoneNumber: '',
     name: '',
@@ -47,13 +51,18 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  const validateForm = (): boolean => {
+  const validateForm = (): string | null => {
     const newErrors: SignupErrors = {};
+    const normalizedPhone = form.phoneNumber.trim();
 
-    if (!form.phoneNumber.trim()) {
+    if (!normalizedPhone) {
       newErrors.phoneNumber = '휴대폰 번호를 입력해주세요';
-    } else if (form.phoneNumber.length !== 11) {
+    } else if (!/^\d+$/.test(normalizedPhone)) {
+      newErrors.phoneNumber = '휴대폰 번호는 숫자만 입력해주세요';
+    } else if (normalizedPhone.length !== 11) {
       newErrors.phoneNumber = '올바른 휴대폰 번호를 입력해주세요';
     }
 
@@ -84,11 +93,14 @@ export default function SignupScreen() {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.values(newErrors).find(Boolean) ?? null;
   };
 
   const handleInputChange = (field: keyof SignupForm, value: string | boolean) => {
     setForm({ ...form, [field]: value });
+    if (submitError) {
+      setSubmitError('');
+    }
     if (errors[field]) {
       setErrors({ ...errors, [field]: undefined });
     }
@@ -109,21 +121,35 @@ export default function SignupScreen() {
     setPhoneVerified(true);
   };
 
-  const handleSignup = () => {
-    if (!validateForm()) return;
+  const handleSignup = async () => {
+    const validationMessage = validateForm();
 
-    // TODO: API 연결
-    console.log('회원가입 시도:', form);
+    if (validationMessage) {
+      setSubmitError(validationMessage);
+      return;
+    }
 
-    // 성공 화면으로 이동
-    router.push('/signup-complete');
+    try {
+      setIsSubmitting(true);
+      await signup({
+        phoneNumber: form.phoneNumber.trim(),
+        userName: form.name.trim(),
+        password: form.password,
+        passwordConfirm: form.passwordConfirm,
+        email: form.email.trim(),
+        termsAgreed: form.agreeToTerms,
+      });
+      router.push('/signup-complete');
+    } catch (error) {
+      setSubmitError(extractApiErrorMessage(error, '회원가입 중 문제가 발생했습니다.'));
+      Alert.alert('회원가입 실패', extractApiErrorMessage(error, '회원가입 중 문제가 발생했습니다.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <TopBar
         title="회원가입"
         onBackPress={() => router.back()}
@@ -132,8 +158,14 @@ export default function SignupScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, AuthSpacing.lg) },
+        ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
       >
         {/* 입력 폼 */}
         <View style={styles.formContainer}>
@@ -142,7 +174,7 @@ export default function SignupScreen() {
             placeholder="- 없이 숫자만 입력해주세요"
             value={form.phoneNumber}
             onChangeText={(text) => {
-              handleInputChange('phoneNumber', text);
+              handleInputChange('phoneNumber', text.replace(/\D/g, ''));
               setPhoneVerified(false);
             }}
             error={errors.phoneNumber}
@@ -220,16 +252,25 @@ export default function SignupScreen() {
           <Text style={styles.errorText}>{errors.agreeToTerms}</Text>
         )}
 
-        {/* 버튼 */}
+        {!!submitError && (
+          <View style={styles.submitErrorBox}>
+            <Text style={styles.submitErrorText}>{submitError}</Text>
+          </View>
+        )}
+
         <View style={styles.buttonContainer}>
           <AuthButton
             title="가입하기"
-            onPress={handleSignup}
+            onPress={() => {
+              Keyboard.dismiss();
+              handleSignup();
+            }}
             variant="blue300"
+            disabled={isSubmitting}
           />
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -242,8 +283,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: AuthSpacing.md,
     paddingVertical: AuthSpacing.lg,
+    paddingBottom: AuthSpacing.lg,
   },
   formContainer: {
     marginBottom: AuthSpacing.lg,
@@ -277,6 +320,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: AuthColors.error,
     marginBottom: AuthSpacing.md,
+  },
+  submitErrorBox: {
+    borderRadius: 10,
+    backgroundColor: '#fff1f0',
+    paddingHorizontal: AuthSpacing.md,
+    paddingVertical: AuthSpacing.sm,
+    marginBottom: AuthSpacing.md,
+  },
+  submitErrorText: {
+    fontSize: 13,
+    color: AuthColors.error,
+    lineHeight: 18,
   },
   buttonContainer: {
     marginTop: AuthSpacing.xl,
