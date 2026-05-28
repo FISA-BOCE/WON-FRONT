@@ -1,8 +1,11 @@
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { logout } from '@/hooks/authApi';
+import { getMyUser } from '@/hooks/userApi';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface TopBarProps {
   title: string;
@@ -21,7 +24,37 @@ export function TopBar({
 }: TopBarProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [expandedSection, setExpandedSection] = useState<'card' | 'securities' | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userName, setUserName] = useState('회원');
   const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!modalVisible) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadUserName() {
+      try {
+        const user = await getMyUser();
+
+        if (isMounted && user.userName?.trim()) {
+          setUserName(user.userName.trim());
+        }
+      } catch {
+        if (isMounted) {
+          setUserName((prev) => prev || '회원');
+        }
+      }
+    }
+
+    void loadUserName();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [modalVisible]);
 
   const openMenu = () => {
     setModalVisible(true);
@@ -47,6 +80,20 @@ export function TopBar({
     if (modalVisible) closeMenu();
     else openMenu();
   };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      closeMenu();
+      router.replace('/login');
+    } catch (error) {
+      Alert.alert('로그아웃 실패', extractApiErrorMessage(error, '로그아웃 중 문제가 발생했습니다.'));
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {showBack ? (
@@ -92,11 +139,11 @@ export function TopBar({
             <View style={styles.headerDark}>
               <View style={styles.headerRow}>
                 <View style={styles.userWrap}>
-                  <Text style={styles.userName}>김우리님, 안녕하세요!</Text>
+                  <Text style={styles.userName}>{userName}님, 안녕하세요!</Text>
                 </View>
                 <Pressable 
                   style={styles.settingsWrap} 
-                  onPress={() => { closeMenu(); router.push('/profile-edit'); }}
+                  onPress={() => { closeMenu(); router.push('/profile'); }}
                 >
                   <Ionicons name="settings" size={18} color={AuthColors.gray500} />
                 </Pressable>
@@ -182,6 +229,22 @@ export function TopBar({
                 </>
               )}
             </Animated.ScrollView>
+
+            <View style={styles.menuFooter}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.logoutButton,
+                  pressed && styles.logoutButtonPressed,
+                  isLoggingOut && styles.logoutButtonDisabled,
+                ]}
+                onPress={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <Text style={styles.logoutButtonText}>
+                  {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
       </Modal>
@@ -278,6 +341,28 @@ const styles = StyleSheet.create({
     color: AuthColors.gray700,
     fontSize: 20,
     fontWeight: '700',
+  },
+  menuFooter: {
+    paddingHorizontal: AuthSpacing.md,
+    marginBottom: AuthSpacing.xl,
+  },
+  logoutButton: {
+    minHeight: 44,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AuthColors.error,
+  },
+  logoutButtonPressed: {
+    opacity: 0.85,
+  },
+  logoutButtonDisabled: {
+    opacity: 0.6,
+  },
+  logoutButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: AuthColors.white,
   },
   menuList: {
     paddingVertical: AuthSpacing.sm,
