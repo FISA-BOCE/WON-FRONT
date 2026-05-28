@@ -2,9 +2,12 @@ import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { login } from '@/hooks/authApi';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -19,6 +22,7 @@ export default function LoginScreen({ route }: any) {
   
   const [phoneNumber, setPhoneNumber] = useState(startInErrorState ? '01012345678' : '');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ phone?: string; password?: string }>(
     startInErrorState ? { password: '비밀번호가 올바르지 않습니다.' } : {}
   );
@@ -43,14 +47,18 @@ export default function LoginScreen({ route }: any) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateForm()) return;
 
-    // TODO: API 연결
-    console.log('로그인 시도:', { phoneNumber, password });
-
-    // 임시로 홈으로 이동
-    router.replace('/profile');
+    try {
+      setIsSubmitting(true);
+      await login(phoneNumber.trim(), password.trim());
+      router.replace('/profile');
+    } catch (error) {
+      Alert.alert('로그인 실패', extractApiErrorMessage(error, '로그인 중 문제가 발생했습니다.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSignupPress = () => {
@@ -68,6 +76,7 @@ export default function LoginScreen({ route }: any) {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* 헤더 */}
         <View style={styles.header}>
@@ -116,6 +125,7 @@ export default function LoginScreen({ route }: any) {
             title="로그인"
             onPress={handleLogin}
             variant="blue300"
+            disabled={isSubmitting}
           />
           
           <Text style={styles.dividerText}>또는</Text>
@@ -124,6 +134,7 @@ export default function LoginScreen({ route }: any) {
             title="회원가입"
             onPress={handleSignupPress}
             variant="secondary"
+            disabled={isSubmitting}
           />
         </View>
       </ScrollView>
