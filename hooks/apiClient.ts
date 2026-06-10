@@ -11,7 +11,11 @@ interface ApiResponse<T> {
   data: T;
 }
 
-interface RefreshResponse {
+interface CreateTokenReissueRequest {
+  refreshToken: string;
+}
+
+interface CreateTokenReissueResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
@@ -21,27 +25,35 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
-function getApiBaseUrl() {
+export function getApiBaseUrl(port = 8081) {
   const expoConfig = Constants.expoConfig as { hostUri?: string } | null;
   const expoGoConfig = Constants.expoGoConfig as { debuggerHost?: string } | null;
   const hostUri = expoConfig?.hostUri ?? expoGoConfig?.debuggerHost ?? '';
   const host = hostUri.split(':')[0];
 
   if (host) {
-    return `http://${host}:8081`;
+    return `http://${host}:${port}`;
   }
 
   if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8081';
+    return `http://10.0.2.2:${port}`;
   }
 
-  return 'http://localhost:8081';
+  return `http://localhost:${port}`;
+}
+
+function createTransactionId() {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).slice(2, 10);
+
+  return `txn-${timestamp}-${random}`;
 }
 
 async function requestTokenRefresh(refreshToken: string) {
-  const response = await refreshClient.post<ApiResponse<RefreshResponse>>('/api/auth/refresh', {
-    refreshToken,
-  });
+  const response = await refreshClient.post<ApiResponse<CreateTokenReissueResponse>, { data: ApiResponse<CreateTokenReissueResponse> }, CreateTokenReissueRequest>(
+    '/api/auth/refresh',
+    { refreshToken },
+  );
 
   const tokens: AuthTokens = response.data.data;
   await saveAuthTokens(tokens);
@@ -70,6 +82,10 @@ apiClient.interceptors.request.use(async (config) => {
 
   if (tokens?.accessToken) {
     config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+  }
+
+  if (!config.headers['X-Transaction-ID']) {
+    config.headers['X-Transaction-ID'] = createTransactionId();
   }
 
   return config;
