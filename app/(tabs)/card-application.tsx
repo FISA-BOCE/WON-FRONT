@@ -8,9 +8,13 @@ import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
 
 const initial = {
-  name: '',
+  koreanName: '',
   englishName: '',
-  phone: '',
+  birthDate: '',
+  gender: '',
+  nationality: '',
+  phoneNumber: '',
+  email: '',
   address: '',
   job: '',
 };
@@ -19,7 +23,16 @@ export default function CardApplicationScreen() {
   const [form, setForm] = useState(initial);
 
   const hasError = useMemo(
-    () => !form.name || !form.englishName || !form.phone || !form.address || !form.job,
+    () =>
+      !form.koreanName ||
+      !form.englishName ||
+      !form.birthDate ||
+      !form.gender ||
+      !form.nationality ||
+      !form.phoneNumber ||
+      !form.email ||
+      !form.address ||
+      !form.job,
     [form]
   );
 
@@ -40,8 +53,8 @@ export default function CardApplicationScreen() {
         <AuthInput
           label="국문 이름 *"
           placeholder="이름을 입력해주세요"
-          value={form.name}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
+          value={form.koreanName}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, koreanName: text }))}
         />
         <AuthInput
           label="영문 이름 *"
@@ -50,16 +63,37 @@ export default function CardApplicationScreen() {
           onChangeText={(text) => setForm((prev) => ({ ...prev, englishName: text }))}
         />
         <AuthInput
-          label="휴대폰 번호 *"
+          label="생년월일 *"
+          placeholder="예: 1999-01-01"
+          value={form.birthDate}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, birthDate: text }))}
+        />
+        <AuthInput
+          label="성별 *"
+          placeholder="성별을 입력해주세요"
+          value={form.gender}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, gender: text }))}
+        />
+        <AuthInput
+          label="국적 *"
+          placeholder="국적을 입력해주세요"
+          value={form.nationality}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, nationality: text }))}
+        />
+        <AuthInput
+          label="전화번호 *"
           placeholder="01012345678"
-          keyboardType="number-pad"
-          value={form.phone}
-          onChangeText={(text) =>
-            setForm((prev) => ({
-              ...prev,
-              phone: text.replace(/\D/g, ''),
-            }))
-          }
+          keyboardType="phone-pad"
+          value={form.phoneNumber}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, phoneNumber: text }))}
+        />
+        <AuthInput
+          label="이메일 *"
+          placeholder="example@email.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={form.email}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
         />
         <AuthInput
           label="주소 *"

@@ -55,7 +55,6 @@ export default function TabLayout() {
       <Tabs.Screen name="card-reward" options={{ href: null }} />
       <Tabs.Screen name="card-reward-history" options={{ href: null }} />
       <Tabs.Screen name="card-reward-detail" options={{ href: null }} />
-      <Tabs.Screen name="card-monthly-performance" options={{ href: null }} />
       <Tabs.Screen name="card-monthly-usage" options={{ href: null }} />
       <Tabs.Screen name="card-home-empty" options={{ href: null }} />
       <Tabs.Screen name="invest-no-account" options={{ href: null }} />

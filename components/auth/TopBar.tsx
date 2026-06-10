@@ -176,12 +176,6 @@ export function TopBar({
                   </Pressable>
                   <Pressable 
                     style={styles.menuRow} 
-                    onPress={() => { closeMenu(); router.push('/card-monthly-performance'); }}
-                  >
-                    <Text style={styles.menuRowText}>전월 실적</Text>
-                  </Pressable>
-                  <Pressable 
-                    style={styles.menuRow} 
                     onPress={() => { closeMenu(); router.push('/card-create'); }}
                   >
                     <Text style={styles.menuRowText}>혜택</Text>

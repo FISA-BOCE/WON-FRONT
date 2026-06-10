@@ -50,8 +50,7 @@ export default function CardHomeScreen() {
 
         <Text style={styles.sectionTitle}>자주 쓰는 메뉴</Text>
         <View style={styles.quickGrid}>
-          <QuickMenu icon="card-outline" label="결제 내역" onPress={() => router.push('/card-reward')} />
-          <QuickMenu icon="pie-chart-outline" label="전월 실적" onPress={() => router.push('/card-monthly-performance')} />
+          <QuickMenu icon="card-outline" label="결제 내역" onPress={() => router.push('/card-monthly-usage')} />
           <QuickMenu icon="sparkles-outline" label="혜택" onPress={() => router.push('/card-create')} />
           <QuickMenu icon="checkbox-outline" label="리워드" onPress={() => router.push('/card-reward')} />
         </View>
