@@ -9,8 +9,38 @@ export interface CardApplicationInvestAccount {
 }
 
 export interface CardInfo {
+  cardUuid: string;
   cardName: string;
   cardNoDisplay: string;
+}
+
+export interface CardAutoInvestEtf {
+  etfId: number;
+  etfName: string;
+  ticker: string;
+  effectiveFrom: string;
+}
+
+export interface CardAutoInvestInfo {
+  cardUuid: string;
+  currentEtf: CardAutoInvestEtf | null;
+  pendingEtf: CardAutoInvestEtf | null;
+  isAutoInvestEnabled: boolean;
+}
+
+export interface CardAutoInvestChangeResult {
+  cardUuid: string;
+  previousEtf: {
+    etfName: string;
+    ticker: string;
+    effectiveTo: string;
+  } | null;
+  newEtf: {
+    etfId: number;
+    etfName: string;
+    ticker: string;
+    effectiveFrom: string;
+  } | null;
 }
 
 export interface CardApplicationApplicantInfo {
@@ -45,12 +75,29 @@ export interface CardApplicationCreateResult {
   autoInvestEtfName: string;
 }
 
+export interface RewardLedgerItem {
+  pointLedgerId: number;
+  baseMonth: string;
+  pointAmount: number;
+  type: string;
+  sweepStatus: string;
+  sweepFailureCode?: string;
+  sweepFailureMessage?: string;
+  occurredAt: string;
+}
+
 interface CardApplicationInvestAccountsResponse {
   accounts: CardApplicationInvestAccount[];
 }
 
 interface CardInfoResponse {
   cards: CardInfo[];
+}
+
+export interface RewardLedgerResponse {
+  baseYear: number;
+  totalAccumulatedAmount: number;
+  ledgers: RewardLedgerItem[];
 }
 
 export async function getCardApplicationInvestAccounts() {
@@ -79,6 +126,46 @@ export async function getCardInfo() {
   const response = await apiClient.get<ApiResponse<CardInfoResponse>>('/api/cards/info');
 
   return response.data.data.cards;
+}
+
+export async function getCardAutoInvest(cardUuid: string) {
+  const response = await apiClient.get<ApiResponse<CardAutoInvestInfo>>(
+    `/api/cards/${cardUuid}/auto-invest`,
+  );
+
+  return response.data.data;
+}
+
+export async function changeCardAutoInvest(cardUuid: string, etfId: number) {
+  const response = await apiClient.patch<
+    ApiResponse<CardAutoInvestChangeResult>,
+    { data: ApiResponse<CardAutoInvestChangeResult> },
+    { etfId: number }
+  >(`/api/cards/${cardUuid}/auto-invest`, { etfId });
+
+  return response.data.data;
+}
+
+export async function getRewardLedgers(type?: string) {
+  const response = await apiClient.get<ApiResponse<RewardLedgerResponse>>(
+    '/api/cards/rewards/ledger',
+    {
+      params: type ? { type } : undefined,
+    },
+  );
+
+  return response.data.data.ledgers;
+}
+
+export async function getRewardLedgerOverview(type?: string) {
+  const response = await apiClient.get<ApiResponse<RewardLedgerResponse>>(
+    '/api/cards/rewards/ledger',
+    {
+      params: type ? { type } : undefined,
+    },
+  );
+
+  return response.data.data;
 }
 
 export async function applyCard(payload: CardApplicationCreatePayload) {

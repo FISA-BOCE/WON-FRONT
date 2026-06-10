@@ -94,7 +94,7 @@ export default function CardEtfScreen() {
       riskGrade: selectedEtf.riskGrade,
     });
 
-    router.push('/card-complete');
+    router.push('/(tabs)/card-complete');
   };
 
   return (
@@ -149,7 +149,7 @@ export default function CardEtfScreen() {
         ) : errorMessage ? (
           <View style={styles.centerState}>
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <AuthButton title="다시 시도" onPress={() => router.replace('/card-etf')} />
+            <AuthButton title="다시 시도" onPress={() => router.replace('/(tabs)/card-etf')} />
           </View>
         ) : (
           <>

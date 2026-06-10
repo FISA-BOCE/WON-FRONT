@@ -79,12 +79,12 @@ export default function CardAccountScreen() {
     }
 
     setCardApplicationSelectedAccount(selectedAccount);
-    router.push('/card-etf');
+    router.push('/(tabs)/card-etf');
   };
 
   const handleCreateInvestAccount = () => {
     resetCardApplicationDraft();
-    router.push('/invest-account-create-1');
+    router.push('/(tabs)/invest-account-create-1');
   };
 
   return (
@@ -110,7 +110,7 @@ export default function CardAccountScreen() {
         ) : errorMessage ? (
           <View style={styles.centerState}>
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <AuthButton title="다시 시도" onPress={() => router.replace('/card-account')} />
+            <AuthButton title="다시 시도" onPress={() => router.replace('/(tabs)/card-account')} />
           </View>
         ) : (
           <>

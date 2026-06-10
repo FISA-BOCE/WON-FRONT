@@ -1,18 +1,69 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
-import { REWARD_FILTERS, REWARD_HISTORY, type RewardFilter } from '@/constants/rewardHistory';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import {
+  getRewardLedgerOverview,
+  RewardLedgerResponse,
+} from '@/hooks/cardApi';
+
+type RewardFilter = '전체' | '적립' | '미적용';
+
+const REWARD_FILTERS: RewardFilter[] = ['전체', '적립', '미적용'];
 
 export default function CardRewardHistoryScreen() {
   const [selectedFilter, setSelectedFilter] = useState<RewardFilter>('전체');
+  const [overview, setOverview] = useState<RewardLedgerResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const filteredRewards = useMemo(
-    () => REWARD_HISTORY.filter((item) => selectedFilter === '전체' || item.status === selectedFilter),
-    [selectedFilter]
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      const loadRewardHistory = async () => {
+        try {
+          setIsLoading(true);
+          setErrorMessage('');
+          const nextOverview = await getRewardLedgerOverview();
+
+          if (isMounted) {
+            setOverview(nextOverview);
+          }
+        } catch (error) {
+          if (isMounted) {
+            setErrorMessage(extractApiErrorMessage(error, '리워드 이력을 불러오지 못했습니다.'));
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      void loadRewardHistory();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
   );
+
+  const filteredRewards = useMemo(() => {
+    const ledgers = overview?.ledgers ?? [];
+
+    return ledgers.filter((item) => {
+      if (selectedFilter === '전체') {
+        return true;
+      }
+
+      return mapSweepStatusToFilter(item.sweepStatus) === selectedFilter;
+    });
+  }, [overview?.ledgers, selectedFilter]);
 
   return (
     <View style={styles.container}>
@@ -20,12 +71,12 @@ export default function CardRewardHistoryScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryCaption}>2026년 누적 적립</Text>
-          <Text style={styles.summaryAmount}>1,245,000원</Text>
+          <Text style={styles.summaryCaption}>{overview ? `${overview.baseYear}년 누적 적립` : '리워드 누적 적립'}</Text>
+          <Text style={styles.summaryAmount}>{formatWon(overview?.totalAccumulatedAmount ?? 0)}</Text>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>적립률 구간</Text>
-            <Text style={styles.summaryValue}>50~150만원 · 1.0% 적용</Text>
+            <Text style={styles.summaryLabel}>전체 건수</Text>
+            <Text style={styles.summaryValue}>{`${overview?.ledgers.length ?? 0}건`}</Text>
           </View>
         </View>
 
@@ -42,48 +93,109 @@ export default function CardRewardHistoryScreen() {
           })}
         </View>
 
-        <View style={styles.listWrap}>
-          {filteredRewards.map((item, index) => (
-            <Pressable
-              key={`${item.id}-${index}`}
-              style={styles.listCard}
-              onPress={() =>
-                router.push({
-                  pathname: '/card-reward-detail',
-                  params: { id: item.id },
-                })
-              }
-            >
-              <View style={styles.listHeader}>
-                <Text style={styles.listDate}>{item.date}</Text>
-                <Text style={styles.listAmount}>{item.amount}</Text>
-              </View>
-              <View style={styles.listBottomRow}>
-                <Text style={styles.listTicker}>{item.ticker}</Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    item.status === '적립' && styles.statusEarned,
-                    item.status === '미적용' && styles.statusMissed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      item.status === '적립' && styles.statusTextEarned,
-                      item.status === '미적용' && styles.statusTextMissed,
-                    ]}
+        {isLoading ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator size="small" color={AuthColors.blue300} />
+            <Text style={styles.stateText}>리워드 이력을 불러오는 중입니다.</Text>
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.centerState}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : (
+          <View style={styles.listWrap}>
+            {filteredRewards.length > 0 ? (
+              filteredRewards.map((item) => {
+                const filterStatus = mapSweepStatusToFilter(item.sweepStatus);
+                const statusLabel = mapSweepStatusLabel(item.sweepStatus);
+
+                return (
+                  <Pressable
+                    key={item.pointLedgerId}
+                    style={styles.listCard}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/card-reward-detail',
+                        params: { id: String(item.pointLedgerId) },
+                      })
+                    }
                   >
-                    {item.status}
-                  </Text>
-                </View>
+                    <View style={styles.listHeader}>
+                      <Text style={styles.listDate}>{formatBaseMonth(item.baseMonth)}</Text>
+                      <Text style={styles.listAmount}>{formatWon(item.pointAmount)}</Text>
+                    </View>
+                    <View style={styles.listBottomRow}>
+                      <Text style={styles.listTicker}>{item.type}</Text>
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          filterStatus === '적립' && styles.statusEarned,
+                          filterStatus === '미적용' && styles.statusMissed,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusText,
+                            filterStatus === '적립' && styles.statusTextEarned,
+                            filterStatus === '미적용' && styles.statusTextMissed,
+                          ]}
+                        >
+                          {statusLabel}
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })
+            ) : (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyText}>선택한 카테고리의 지급 내역이 없습니다.</Text>
               </View>
-            </Pressable>
-          ))}
-        </View>
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
+}
+
+function mapSweepStatusToFilter(sweepStatus: string): Exclude<RewardFilter, '전체'> {
+  switch (sweepStatus) {
+    case 'COMPLETED':
+    case 'SUCCESS':
+      return '적립';
+    default:
+      return '미적용';
+  }
+}
+
+function mapSweepStatusLabel(sweepStatus: string) {
+  switch (sweepStatus) {
+    case 'COMPLETED':
+      return '적립 완료';
+    case 'SUCCESS':
+      return '적립 성공';
+    case 'REQUESTED':
+      return '처리 중';
+    case 'FAILED':
+      return '실패';
+    default:
+      return sweepStatus;
+  }
+}
+
+function formatBaseMonth(value: string) {
+  const [year, month] = value.split('-');
+
+  if (!year || !month) {
+    return value;
+  }
+
+  return `${year}년 ${month}월`;
+}
+
+function formatWon(value: number) {
+  return `${Math.round(value).toLocaleString('ko-KR')}원`;
 }
 
 const styles = StyleSheet.create({
@@ -161,6 +273,22 @@ const styles = StyleSheet.create({
   filterIndicatorActive: {
     backgroundColor: AuthColors.blue300,
   },
+  centerState: {
+    minHeight: 280,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stateText: {
+    fontSize: 14,
+    color: AuthColors.textGray,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: AuthColors.error,
+    textAlign: 'center',
+  },
   listWrap: {
     marginTop: 14,
     gap: 10,
@@ -217,5 +345,17 @@ const styles = StyleSheet.create({
   },
   statusTextMissed: {
     color: AuthColors.error,
+  },
+  emptyCard: {
+    borderWidth: 1,
+    borderColor: AuthColors.borderDarkGray,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: AuthColors.textGray,
   },
 });

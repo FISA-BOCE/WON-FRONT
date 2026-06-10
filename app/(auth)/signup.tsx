@@ -139,7 +139,7 @@ export default function SignupScreen() {
         email: form.email.trim(),
         termsAgreed: form.agreeToTerms,
       });
-      router.push('/signup-complete');
+      router.push('/(auth)/signup-complete');
     } catch (error) {
       setSubmitError(extractApiErrorMessage(error, '회원가입 중 문제가 발생했습니다.'));
       Alert.alert('회원가입 실패', extractApiErrorMessage(error, '회원가입 중 문제가 발생했습니다.'));

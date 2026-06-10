@@ -23,7 +23,7 @@ export default function SecuritiesNoAccountScreen() {
 
         <Text style={styles.sectionTitle}>증권계좌 시작하기</Text>
 
-        <Pressable style={styles.primaryOption} onPress={() => router.push('/card-account')}>
+        <Pressable style={styles.primaryOption} onPress={() => router.push('/(tabs)/card-account')}>
           <View style={styles.optionLeft}>
             <View style={[styles.optionIconWrap, styles.optionIconBlue]}>
               <Ionicons name="document-text-outline" size={18} color={AuthColors.blue300} />
@@ -39,7 +39,7 @@ export default function SecuritiesNoAccountScreen() {
 
         <Text style={styles.orText}>또는</Text>
 
-        <Pressable style={styles.secondaryOption} onPress={() => router.push('/invest-account-create-1')}>
+        <Pressable style={styles.secondaryOption} onPress={() => router.push('/(tabs)/invest-account-create-1')}>
           <View style={styles.optionLeft}>
             <View style={[styles.optionIconWrap, styles.optionIconGray]}>
               <Ionicons name="add" size={20} color={AuthColors.gray500} />

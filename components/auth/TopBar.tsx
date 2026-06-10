@@ -86,7 +86,7 @@ export function TopBar({
       setIsLoggingOut(true);
       await logout();
       closeMenu();
-      router.replace('/login');
+      router.replace('/(auth)/login');
     } catch (error) {
       Alert.alert('로그아웃 실패', extractApiErrorMessage(error, '로그아웃 중 문제가 발생했습니다.'));
     } finally {
@@ -143,7 +143,7 @@ export function TopBar({
                 </View>
                 <Pressable 
                   style={styles.settingsWrap} 
-                  onPress={() => { closeMenu(); router.push('/profile'); }}
+                  onPress={() => { closeMenu(); router.push('/(tabs)/profile'); }}
                 >
                   <Ionicons name="settings" size={18} color={AuthColors.gray500} />
                 </Pressable>
@@ -170,19 +170,19 @@ export function TopBar({
                 <>
                   <Pressable 
                     style={styles.menuRow} 
-                    onPress={() => { closeMenu(); router.push('/card'); }}
+                    onPress={() => { closeMenu(); router.push('/(tabs)/card'); }}
                   >
                     <Text style={styles.menuRowText}>결제 내역</Text>
                   </Pressable>
                   <Pressable 
                     style={styles.menuRow} 
-                    onPress={() => { closeMenu(); router.push('/card-create'); }}
+                    onPress={() => { closeMenu(); router.push('/(tabs)/card-create'); }}
                   >
                     <Text style={styles.menuRowText}>혜택</Text>
                   </Pressable>
                   <Pressable 
                     style={styles.menuRow} 
-                    onPress={() => { closeMenu(); router.push('/card-reward'); }}
+                    onPress={() => { closeMenu(); router.push('/(tabs)/card-reward'); }}
                   >
                     <Text style={styles.menuRowText}>리워드</Text>
                   </Pressable>
@@ -210,13 +210,13 @@ export function TopBar({
                 <>
                   <Pressable 
                     style={styles.menuRow} 
-                    onPress={() => { closeMenu(); router.push('/invest'); }}
+                    onPress={() => { closeMenu(); router.push('/(tabs)/invest'); }}
                   >
                     <Text style={styles.menuRowText}>계좌</Text>
                   </Pressable>
                   <Pressable 
                     style={styles.menuRow} 
-                    onPress={() => { closeMenu(); router.push('/invest'); }}
+                    onPress={() => { closeMenu(); router.push('/(tabs)/invest'); }}
                   >
                     <Text style={styles.menuRowText}>ETF 자동 체결 내역</Text>
                   </Pressable>

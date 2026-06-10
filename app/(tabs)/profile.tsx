@@ -54,7 +54,7 @@ export default function ProfileScreen() {
     try {
       setIsLoggingOut(true);
       await logout();
-      router.replace('/login');
+      router.replace('/(auth)/login');
     } catch (error) {
       Alert.alert('로그아웃 실패', extractApiErrorMessage(error, '로그아웃 중 문제가 발생했습니다.'));
     } finally {
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
       <TopBar
         title="내 정보"
         onBackPress={() => router.back()}
-        onRightPress={() => router.push('/profile-edit')}
+        onRightPress={() => router.push('/(tabs)/profile-edit')}
       />
 
       <View style={styles.content}>
@@ -92,7 +92,7 @@ export default function ProfileScreen() {
 
           <Pressable
             style={styles.editButton}
-            onPress={() => router.push('/profile-edit')}
+            onPress={() => router.push('/(tabs)/profile-edit')}
           >
             <Ionicons name="create-outline" size={24} color={AuthColors.textBlack} />
           </Pressable>
@@ -116,7 +116,7 @@ export default function ProfileScreen() {
           <Text style={styles.orText}>또는</Text>
           <AuthButton
             title="회원탈퇴"
-            onPress={() => router.push('/withdraw')}
+            onPress={() => router.push('/(auth)/withdraw')}
             variant="secondary"
             disabled={isLoggingOut}
           />

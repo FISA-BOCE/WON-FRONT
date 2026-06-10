@@ -53,7 +53,7 @@ export default function LoginScreen({ route }: any) {
     try {
       setIsSubmitting(true);
       await login(phoneNumber.trim(), password.trim());
-      router.replace('/card');
+      router.replace('/(tabs)/card');
     } catch (error) {
       Alert.alert('로그인 실패', extractApiErrorMessage(error, '로그인 중 문제가 발생했습니다.'));
     } finally {
@@ -62,7 +62,7 @@ export default function LoginScreen({ route }: any) {
   };
 
   const handleSignupPress = () => {
-    router.push('/signup');
+    router.push('/(auth)/signup');
   };
 
   return (
