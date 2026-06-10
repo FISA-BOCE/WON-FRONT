@@ -33,7 +33,7 @@ export default function WithdrawScreen() {
       Alert.alert('회원 탈퇴 완료', '회원 탈퇴가 완료되었습니다.', [
         {
           text: '확인',
-          onPress: () => router.replace('/login'),
+          onPress: () => router.replace('/(auth)/login'),
         },
       ]);
     } catch (error) {

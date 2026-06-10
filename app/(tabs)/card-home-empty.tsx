@@ -40,7 +40,7 @@ export default function CardHomeEmptyScreen() {
               </View>
             </View>
 
-            <Pressable style={styles.applyButton} onPress={() => router.push('/card-create')}>
+            <Pressable style={styles.applyButton} onPress={() => router.push('/(tabs)/card-create')}>
               <Text style={styles.applyButtonText}>신청하기</Text>
             </Pressable>
           </View>

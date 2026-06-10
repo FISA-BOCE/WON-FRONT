@@ -108,7 +108,7 @@ export default function ProfileEditScreen() {
       Alert.alert('회원 정보 수정 완료', '회원 정보가 수정되었습니다.', [
         {
           text: '확인',
-          onPress: () => router.replace('/profile'),
+          onPress: () => router.replace('/(tabs)/profile'),
         },
       ]);
     } catch (error) {
@@ -122,7 +122,7 @@ export default function ProfileEditScreen() {
     <View style={styles.container}>
       <TopBar
         title="회원 정보 수정"
-        onBackPress={() => router.replace('/profile')}
+        onBackPress={() => router.replace('/(tabs)/profile')}
       />
 
       <ScrollView

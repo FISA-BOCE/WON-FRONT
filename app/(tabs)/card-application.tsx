@@ -51,7 +51,7 @@ export default function CardApplicationScreen() {
       koreanName: form.koreanName.trim(),
       englishName: form.englishName.trim(),
     });
-    router.push('/card-terms');
+    router.push('/(tabs)/card-terms');
   };
 
   return (

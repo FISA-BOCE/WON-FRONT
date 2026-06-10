@@ -73,7 +73,7 @@ export default function SecuritiesAccountOpenStep1Screen() {
         <View style={styles.footerSpacing} />
         <AuthButton
           title="개설 시작하기"
-          onPress={() => router.push('/invest-account-create-2')}
+          onPress={() => router.push('/(tabs)/invest-account-create-2')}
         />
       </ScrollView>
     </View>

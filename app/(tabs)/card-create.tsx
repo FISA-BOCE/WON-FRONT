@@ -11,7 +11,7 @@ import { resetCardApplicationDraft } from '@/hooks/cardApplicationFlow';
 export default function CardCreateScreen() {
   const handleStart = () => {
     resetCardApplicationDraft();
-    router.push('/card-application');
+    router.push('/(tabs)/card-application');
   };
 
   return (

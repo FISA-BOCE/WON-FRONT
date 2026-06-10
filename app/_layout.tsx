@@ -67,14 +67,14 @@ function RootLayoutContent() {
 
     if (!hasToken) {
       if (isTabsRoute || (isAuthRoute && !isAllowedUnauthRoute)) {
-        router.replace('/login');
+        router.replace('/(auth)/login');
       }
 
       return;
     }
 
     if (isAuthRoute || pathname === '/') {
-      router.replace('/card');
+      router.replace('/(tabs)/card');
     }
   }, [hasToken, isAuthResolved, pathname, router, segments]);
 
