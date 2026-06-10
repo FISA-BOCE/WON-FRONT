@@ -1,13 +1,61 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, usePathname } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
+import {
+  hasPendingCardApplicationDraft,
+  resetCardApplicationDraft,
+} from '@/hooks/cardApplicationFlow';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+const cardApplicationRoutes = new Set([
+  '/card-create',
+  '/card-application',
+  '/card-terms',
+  '/card-account',
+  '/card-etf',
+  '/card-complete',
+]);
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const pathname = usePathname();
+  const previousPathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    const previousPathname = previousPathnameRef.current;
+    const wasInCardApplicationFlow = cardApplicationRoutes.has(previousPathname);
+    const isInCardApplicationFlow = cardApplicationRoutes.has(pathname);
+
+    if (
+      wasInCardApplicationFlow &&
+      !isInCardApplicationFlow &&
+      hasPendingCardApplicationDraft()
+    ) {
+      resetCardApplicationDraft();
+    }
+
+    previousPathnameRef.current = pathname;
+  }, [pathname]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (
+        (nextState === 'inactive' || nextState === 'background') &&
+        cardApplicationRoutes.has(previousPathnameRef.current) &&
+        hasPendingCardApplicationDraft()
+      ) {
+        resetCardApplicationDraft();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return (
     <Tabs

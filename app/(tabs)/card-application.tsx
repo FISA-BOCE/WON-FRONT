@@ -1,40 +1,58 @@
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
-
-const initial = {
-  koreanName: '',
-  englishName: '',
-  birthDate: '',
-  gender: '',
-  nationality: '',
-  phoneNumber: '',
-  email: '',
-  address: '',
-  job: '',
-};
+import {
+  CardApplicationApplicantInfoDraft,
+  setCardApplicationApplicantInfo,
+  useCardApplicationDraft,
+} from '@/hooks/cardApplicationFlow';
 
 export default function CardApplicationScreen() {
-  const [form, setForm] = useState(initial);
+  const draft = useCardApplicationDraft();
+  const [form, setForm] = useState<CardApplicationApplicantInfoDraft>(draft.applicantInfo);
 
-  const hasError = useMemo(
-    () =>
-      !form.koreanName ||
-      !form.englishName ||
-      !form.birthDate ||
-      !form.gender ||
-      !form.nationality ||
-      !form.phoneNumber ||
-      !form.email ||
-      !form.address ||
-      !form.job,
-    [form]
-  );
+  const errors = useMemo(() => {
+    const nextErrors: Partial<Record<keyof CardApplicationApplicantInfoDraft, string>> = {};
+
+    if (!form.koreanName.trim()) nextErrors.koreanName = '국문 이름을 입력해주세요.';
+    if (!form.englishName.trim()) nextErrors.englishName = '영문 이름을 입력해주세요.';
+    if (!/^\d{8}$/.test(form.birthDate.trim())) nextErrors.birthDate = '생년월일 8자리를 입력해주세요.';
+    if (!form.gender.trim()) nextErrors.gender = '성별을 입력해주세요.';
+    if (!form.nationality.trim()) nextErrors.nationality = '국적을 입력해주세요.';
+    if (!/^01\d{8,9}$/.test(form.phoneNumber.trim())) nextErrors.phoneNumber = '휴대폰 번호를 확인해주세요.';
+    if (!form.email.trim()) nextErrors.email = '이메일을 입력해주세요.';
+    if (!form.address.trim()) nextErrors.address = '주소를 입력해주세요.';
+    if (!form.job.trim()) nextErrors.job = '직업을 입력해주세요.';
+
+    return nextErrors;
+  }, [form]);
+
+  const hasError = Object.keys(errors).length > 0;
+
+  const updateField = (field: keyof CardApplicationApplicantInfoDraft, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleNext = () => {
+    setCardApplicationApplicantInfo({
+      ...form,
+      birthDate: form.birthDate.trim(),
+      phoneNumber: form.phoneNumber.trim(),
+      email: form.email.trim(),
+      address: form.address.trim(),
+      job: form.job.trim(),
+      gender: form.gender.trim(),
+      nationality: form.nationality.trim(),
+      koreanName: form.koreanName.trim(),
+      englishName: form.englishName.trim(),
+    });
+    router.push('/card-terms');
+  };
 
   return (
     <View style={styles.container}>
@@ -54,38 +72,54 @@ export default function CardApplicationScreen() {
           label="국문 이름 *"
           placeholder="이름을 입력해주세요"
           value={form.koreanName}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, koreanName: text }))}
+          onChangeText={(text) => updateField('koreanName', text)}
+          error={errors.koreanName}
         />
         <AuthInput
           label="영문 이름 *"
           placeholder="여권상의 이름을 입력해주세요"
           value={form.englishName}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, englishName: text }))}
+          onChangeText={(text) => updateField('englishName', text)}
+          error={errors.englishName}
         />
         <AuthInput
           label="생년월일 *"
-          placeholder="예: 1999-01-01"
+          placeholder="예: 19990101"
+          keyboardType="number-pad"
           value={form.birthDate}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, birthDate: text }))}
+          onChangeText={(text) => updateField('birthDate', text.replace(/\D/g, '').slice(0, 8))}
+          error={errors.birthDate}
         />
-        <AuthInput
-          label="성별 *"
-          placeholder="성별을 입력해주세요"
-          value={form.gender}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, gender: text }))}
-        />
+        <View style={styles.genderBlock}>
+          <Text style={styles.genderLabel}>성별 *</Text>
+          <View style={styles.genderRow}>
+            <GenderOption
+              label="여성"
+              selected={form.gender === 'F'}
+              onPress={() => updateField('gender', 'F')}
+            />
+            <GenderOption
+              label="남성"
+              selected={form.gender === 'M'}
+              onPress={() => updateField('gender', 'M')}
+            />
+          </View>
+          {errors.gender ? <Text style={styles.genderError}>{errors.gender}</Text> : null}
+        </View>
         <AuthInput
           label="국적 *"
-          placeholder="국적을 입력해주세요"
+          placeholder="예: KOREAN"
           value={form.nationality}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, nationality: text }))}
+          onChangeText={(text) => updateField('nationality', text)}
+          error={errors.nationality}
         />
         <AuthInput
           label="전화번호 *"
           placeholder="01012345678"
           keyboardType="phone-pad"
           value={form.phoneNumber}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, phoneNumber: text }))}
+          onChangeText={(text) => updateField('phoneNumber', text.replace(/\D/g, '').slice(0, 11))}
+          error={errors.phoneNumber}
         />
         <AuthInput
           label="이메일 *"
@@ -93,34 +127,32 @@ export default function CardApplicationScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
           value={form.email}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
+          onChangeText={(text) => updateField('email', text)}
+          error={errors.email}
         />
         <AuthInput
           label="주소 *"
           placeholder="서울시 마포구 상암동"
           value={form.address}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, address: text }))}
+          onChangeText={(text) => updateField('address', text)}
+          error={errors.address}
         />
         <AuthInput
           label="직업 *"
-          placeholder="선택해주세요"
+          placeholder="직업을 입력해주세요"
           value={form.job}
-          onChangeText={(text) => setForm((prev) => ({ ...prev, job: text }))}
+          onChangeText={(text) => updateField('job', text)}
+          error={errors.job}
         />
 
-        <View style={styles.bottomGap} />
         {hasError ? (
           <View style={styles.helperBox}>
-            <Text style={styles.helperText}>필수 항목을 모두 입력해주세요.</Text>
+            <Text style={styles.helperText}>필수 항목을 카드 신청 스펙에 맞게 모두 입력해주세요.</Text>
           </View>
         ) : null}
 
         <View style={styles.bottomGap} />
-        <AuthButton
-          title="다음"
-          disabled={hasError}
-          onPress={() => router.push('./card-terms' as never)}
-        />
+        <AuthButton title="다음" disabled={hasError} onPress={handleNext} />
       </ScrollView>
     </View>
   );
@@ -128,6 +160,27 @@ export default function CardApplicationScreen() {
 
 function StepDot({ active = false }: { active?: boolean }) {
   return <View style={[styles.stepDot, active && styles.stepDotActive]} />;
+}
+
+function GenderOption({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={[styles.genderOption, selected && styles.genderOptionSelected]}
+      onPress={onPress}
+    >
+      <Text style={[styles.genderOptionText, selected && styles.genderOptionTextSelected]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -161,7 +214,48 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: AuthColors.gray900,
-    marginVertical: AuthSpacing.default
+    marginVertical: AuthSpacing.default,
+  },
+  genderBlock: {
+    marginBottom: AuthSpacing.md,
+  },
+  genderLabel: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: AuthColors.textGray,
+    marginBottom: AuthSpacing.sm,
+  },
+  genderRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  genderOption: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: AuthColors.borderGray,
+    backgroundColor: AuthColors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  genderOptionSelected: {
+    borderColor: AuthColors.blue300,
+    backgroundColor: '#eff6ff',
+  },
+  genderOptionText: {
+    fontSize: 14,
+    color: AuthColors.textBlack,
+    fontWeight: '500',
+  },
+  genderOptionTextSelected: {
+    color: AuthColors.blue500,
+    fontWeight: '700',
+  },
+  genderError: {
+    fontSize: 12,
+    color: AuthColors.error,
+    marginTop: AuthSpacing.xs,
   },
   helperBox: {
     marginTop: 8,

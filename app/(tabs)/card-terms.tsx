@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
+import { setCardApplicationTerms, useCardApplicationDraft } from '@/hooks/cardApplicationFlow';
 
 const requiredTerms = [
   '카드 신청 약관 동의',
@@ -17,23 +18,48 @@ const requiredTerms = [
 const optionalTerms = ['마케팅 정보 수신 (이메일)', '마케팅 정보 수신 (SMS)'];
 
 export default function CardTermsScreen() {
-  const [selected, setSelected] = useState<string[]>([]);
+  const draft = useCardApplicationDraft();
+  const [selected, setSelected] = useState<string[]>(() => {
+    const nextSelected = [...requiredTerms.filter(() => draft.terms.requiredTerms)];
+
+    if (draft.terms.isMarketingEmailAgree) {
+      nextSelected.push(optionalTerms[0]);
+    }
+
+    if (draft.terms.isMarketingSmsAgree) {
+      nextSelected.push(optionalTerms[1]);
+    }
+
+    return nextSelected;
+  });
 
   const allRequiredSelected = useMemo(
     () => requiredTerms.every((term) => selected.includes(term)),
-    [selected]
+    [selected],
   );
 
   const toggle = (label: string) => {
     setSelected((prev) =>
-      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label],
     );
   };
 
   const toggleAllRequired = () => {
     setSelected((prev) =>
-      allRequiredSelected ? prev.filter((item) => !requiredTerms.includes(item)) : [...new Set([...prev, ...requiredTerms])]
+      allRequiredSelected
+        ? prev.filter((item) => !requiredTerms.includes(item))
+        : [...new Set([...prev, ...requiredTerms])],
     );
+  };
+
+  const handleNext = () => {
+    setCardApplicationTerms({
+      requiredTerms: allRequiredSelected,
+      isMarketingEmailAgree: selected.includes(optionalTerms[0]),
+      isMarketingSmsAgree: selected.includes(optionalTerms[1]),
+    });
+
+    router.push('/card-account');
   };
 
   return (
@@ -104,11 +130,7 @@ export default function CardTermsScreen() {
         </View>
 
         <View style={styles.bottomGap} />
-        <AuthButton
-          title="다음"
-          disabled={!allRequiredSelected}
-          onPress={() => router.push('./card-account' as never)}
-        />
+        <AuthButton title="다음" disabled={!allRequiredSelected} onPress={handleNext} />
       </ScrollView>
     </View>
   );
@@ -149,14 +171,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: AuthColors.gray900,
-    marginTop: AuthSpacing.default
+    marginTop: AuthSpacing.default,
   },
   subtitle: {
     fontSize: 14,
     fontWeight: '700',
     color: AuthColors.gray700,
     marginTop: 8,
-    marginBottom: AuthSpacing.xl
+    marginBottom: AuthSpacing.xl,
   },
   allRow: {
     flexDirection: 'row',

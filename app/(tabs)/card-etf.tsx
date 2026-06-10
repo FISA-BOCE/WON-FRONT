@@ -1,43 +1,101 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
-
-type ETFItem = {
-  name: string;
-  ticker: string;
-  desc: string;
-  category: '전체' | '미국' | '카테고리1' | '카테고리2';
-  current?: boolean;
-};
-
-const FILTERS: ETFItem['category'][] = ['전체', '미국', '카테고리1', '카테고리2'];
-
-const ETF_LIST: ETFItem[] = [
-  { name: 'VOO', ticker: 'VOO · S&P 500', desc: 'S&P 500 ETF', category: '미국', current: true },
-  { name: 'QQQ', ticker: 'QQQ · Nasdaq 100', desc: '나스닥100 ETF', category: '미국' },
-  { name: 'SCHD', ticker: 'SCHD · Dividend', desc: '고배당 ETF', category: '카테고리1' },
-  { name: 'TQQQ', ticker: 'TQQQ · 3x Nasdaq', desc: '레버리지 ETF', category: '카테고리2' },
-  { name: 'IVV', ticker: 'IVV · S&P 500', desc: '대형주 추종 ETF', category: '미국' },
-];
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { setCardApplicationSelectedEtf, useCardApplicationDraft } from '@/hooks/cardApplicationFlow';
+import { getInvestEtfs, InvestEtfSummary } from '@/hooks/investApi';
 
 export default function CardEtfScreen() {
+  const draft = useCardApplicationDraft();
   const [search, setSearch] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<ETFItem['category']>('전체');
-  const [selected, setSelected] = useState('VOO');
+  const [selectedFilter, setSelectedFilter] = useState('전체');
+  const [selectedEtfId, setSelectedEtfId] = useState<number | null>(draft.selectedEtf?.etfId ?? null);
+  const [etfs, setEtfs] = useState<InvestEtfSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadEtfs = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage('');
+        const nextEtfs = await getInvestEtfs();
+
+        if (!isMounted) {
+          return;
+        }
+
+        const availableEtfs = nextEtfs
+          .filter((item) => item.isAutoInvestAvailable)
+          .sort((a, b) => a.displayOrder - b.displayOrder);
+
+        setEtfs(availableEtfs);
+
+        if (availableEtfs.length > 0) {
+          setSelectedEtfId((prev) => prev ?? availableEtfs[0].etfId);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(extractApiErrorMessage(error, 'ETF 목록을 불러오지 못했습니다.'));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadEtfs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filterOptions = useMemo(() => {
+    const marketSet = new Set(etfs.map((item) => item.market));
+    return ['전체', ...marketSet];
+  }, [etfs]);
 
   const filteredEtfs = useMemo(() => {
-    return ETF_LIST.filter((item) => {
-      const matchFilter = selectedFilter === '전체' || item.category === selectedFilter;
+    return etfs.filter((item) => {
+      const matchFilter = selectedFilter === '전체' || item.market === selectedFilter;
       const keyword = search.trim().toLowerCase();
-      const matchSearch = !keyword || `${item.name} ${item.ticker} ${item.desc}`.toLowerCase().includes(keyword);
+      const matchSearch =
+        !keyword ||
+        `${item.etfName} ${item.ticker} ${item.description} ${item.market}`
+          .toLowerCase()
+          .includes(keyword);
+
       return matchFilter && matchSearch;
     });
-  }, [search, selectedFilter]);
+  }, [etfs, search, selectedFilter]);
+
+  const handleNext = () => {
+    const selectedEtf = etfs.find((item) => item.etfId === selectedEtfId);
+
+    if (!selectedEtf) {
+      return;
+    }
+
+    setCardApplicationSelectedEtf({
+      etfId: selectedEtf.etfId,
+      ticker: selectedEtf.ticker,
+      etfName: selectedEtf.etfName,
+      description: selectedEtf.description,
+      market: selectedEtf.market,
+      riskGrade: selectedEtf.riskGrade,
+    });
+
+    router.push('/card-complete');
+  };
 
   return (
     <View style={styles.container}>
@@ -52,7 +110,7 @@ export default function CardEtfScreen() {
         </View>
 
         <Text style={styles.title}>ETF를 선택해 주세요</Text>
-        <Text style={styles.subtitle}>사전 등록된 거래 가능 ETF만 표시됩니다.</Text>
+        <Text style={styles.subtitle}>제공 ETF 목록 조회 API 결과를 기준으로 표시됩니다.</Text>
 
         <View style={styles.searchBox}>
           <Ionicons name="search" size={16} color={AuthColors.textLightGray} />
@@ -65,62 +123,109 @@ export default function CardEtfScreen() {
           />
         </View>
 
-        <View style={styles.filterRow}>
-          {FILTERS.map((filter) => {
-            const active = selectedFilter === filter;
-            return (
-              <Pressable key={filter} style={styles.filterItem} onPress={() => setSelectedFilter(filter)}>
-                <Text style={[styles.filterText, active && styles.filterTextActive]}>{filter}</Text>
-                {active ? <View style={styles.filterUnderline} /> : <View style={styles.filterSpacer} />}
-              </Pressable>
-            );
-          })}
-        </View>
+        {!isLoading && !errorMessage ? (
+          <View style={styles.filterRow}>
+            {filterOptions.map((filter) => {
+              const active = selectedFilter === filter;
+              return (
+                <Pressable
+                  key={filter}
+                  style={styles.filterItem}
+                  onPress={() => setSelectedFilter(filter)}
+                >
+                  <Text style={[styles.filterText, active && styles.filterTextActive]}>{filter}</Text>
+                  {active ? <View style={styles.filterUnderline} /> : <View style={styles.filterSpacer} />}
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
 
-        <View style={styles.listSection}>
-          {filteredEtfs.map((item) => {
-            const isSelected = selected === item.name;
-            return (
-              <Pressable
-                key={item.name}
-                style={[styles.etfCard, isSelected && styles.etfCardSelected]}
-                onPress={() => setSelected(item.name)}
-              >
-                <View style={styles.etfLeft}>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{item.name}</Text>
-                  </View>
-                  <View style={styles.etfTextWrap}>
-                    <Text style={styles.etfTitle}>{item.desc}</Text>
-                    <Text style={styles.etfDesc}>{item.ticker}</Text>
-                  </View>
-                </View>
-                <View style={styles.statusWrap}>
-                  {isSelected ? (
-                    <Ionicons name="checkmark-circle" size={22} color={AuthColors.blue300} />
-                  ) : (
-                    <View style={styles.unchecked} />
-                  )}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
+        {isLoading ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator size="small" color={AuthColors.blue300} />
+            <Text style={styles.stateText}>ETF 목록을 불러오고 있습니다.</Text>
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.centerState}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+            <AuthButton title="다시 시도" onPress={() => router.replace('/card-etf')} />
+          </View>
+        ) : (
+          <>
+            <View style={styles.listSection}>
+              {filteredEtfs.map((item) => {
+                const isSelected = selectedEtfId === item.etfId;
+                return (
+                  <Pressable
+                    key={item.etfId}
+                    style={[styles.etfCard, isSelected && styles.etfCardSelected]}
+                    onPress={() => setSelectedEtfId(item.etfId)}
+                  >
+                    <View style={styles.etfLeft}>
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{item.ticker}</Text>
+                      </View>
+                      <View style={styles.etfTextWrap}>
+                        <Text style={styles.etfTitle}>{item.etfName}</Text>
+                        <Text style={styles.etfDesc}>{item.description || item.market}</Text>
+                        <Text style={styles.etfMeta}>
+                          {item.market} · {item.currency} · 위험도 {formatRiskGrade(item.riskGrade)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.statusWrap}>
+                      {isSelected ? (
+                        <Ionicons name="checkmark-circle" size={22} color={AuthColors.blue300} />
+                      ) : (
+                        <View style={styles.unchecked} />
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
 
-        <View style={styles.noticeBox}>
-          <Text style={styles.noticeText}>투자 권유가 아니며 원금 손실 가능성이 있습니다.</Text>
-          <Text style={styles.noticeText}>투자 결정은 본인 판단과 책임에 따라 진행하세요.</Text>
-        </View>
+            {filteredEtfs.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <Text style={styles.stateText}>검색 조건에 맞는 ETF가 없습니다.</Text>
+              </View>
+            ) : null}
 
-        <View style={styles.bottomGap} />
-        <AuthButton
-          style={styles.nextButton}
-          title="다음"
-          onPress={() => router.push('./card-complete' as never)}
-        />
+            <View style={styles.noticeBox}>
+              <Text style={styles.noticeText}>투자 권유가 아니며 원금 손실 가능성이 있습니다.</Text>
+              <Text style={styles.noticeText}>투자 결정은 본인 판단과 책임에 따라 진행하세요.</Text>
+            </View>
+
+            <View style={styles.bottomGap} />
+            <AuthButton
+              style={styles.nextButton}
+              title="다음"
+              onPress={handleNext}
+              disabled={!selectedEtfId}
+            />
+          </>
+        )}
       </ScrollView>
     </View>
   );
+}
+
+function formatRiskGrade(value: InvestEtfSummary['riskGrade']) {
+  switch (value) {
+    case 'VERY_LOW':
+      return '매우 낮음';
+    case 'LOW':
+      return '낮음';
+    case 'MEDIUM':
+      return '보통';
+    case 'HIGH':
+      return '높음';
+    case 'VERY_HIGH':
+      return '매우 높음';
+    default:
+      return '미정';
+  }
 }
 
 function StepDot({ active = false }: { active?: boolean }) {
@@ -159,14 +264,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: AuthColors.gray900,
-    marginTop: AuthSpacing.default
+    marginTop: AuthSpacing.default,
   },
   subtitle: {
     fontSize: 14,
     fontWeight: '700',
     color: AuthColors.gray700,
     marginTop: 8,
-    marginBottom: AuthSpacing.xl
+    marginBottom: AuthSpacing.xl,
   },
   searchBox: {
     width: '100%',
@@ -191,10 +296,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: 36,
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   filterItem: {
-    width: '25%',
+    minWidth: '25%',
     alignItems: 'center',
+    marginBottom: 8,
   },
   filterText: {
     fontSize: 14,
@@ -208,12 +315,29 @@ const styles = StyleSheet.create({
     width: 52,
     height: 2,
     backgroundColor: AuthColors.blue300,
-    marginTop: 8
+    marginTop: 8,
   },
   filterSpacer: {
     width: 52,
     height: 2,
-    marginTop: 8
+    marginTop: 8,
+  },
+  centerState: {
+    minHeight: 260,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stateText: {
+    fontSize: 14,
+    color: AuthColors.textGray,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: AuthColors.error,
+    textAlign: 'center',
+    marginBottom: 12,
   },
   listSection: {
     width: '100%',
@@ -238,12 +362,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   badge: {
-    width: 40,
+    minWidth: 52,
     height: 40,
     borderRadius: 12,
     backgroundColor: '#eff6ff',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
   },
   badgeText: {
     color: '#2563eb',
@@ -263,23 +388,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: AuthColors.textGray,
   },
+  etfMeta: {
+    marginTop: 4,
+    fontSize: 11,
+    color: AuthColors.gray500,
+  },
   statusWrap: {
     alignItems: 'flex-end',
     gap: 8,
-  },
-  currentPill: {
-    minWidth: 46,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: '#eff6ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-  },
-  currentPillText: {
-    color: '#2563eb',
-    fontSize: 12,
-    fontWeight: '700',
   },
   unchecked: {
     width: 18,
@@ -287,6 +403,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: AuthColors.borderDarkGray,
+  },
+  emptyBox: {
+    marginTop: 24,
+    marginBottom: 8,
   },
   noticeBox: {
     width: '100%',
