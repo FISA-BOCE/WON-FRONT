@@ -74,7 +74,6 @@ export default function ExploreScreen() {
               <Text style={styles.accountSub}>123-***-***456 | 김*리</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={AuthColors.white} />
         </View>
 
         <Text style={styles.sectionTitle1}>원화 / 달러</Text>

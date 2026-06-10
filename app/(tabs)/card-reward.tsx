@@ -30,7 +30,6 @@ export default function CardRewardScreen() {
         <Text style={styles.sectionTitle}>산정 내역</Text>
         <View style={styles.cardBox}>
           <InfoRow label="전월 실적" value="820,000원" valueStyle={styles.valueGreen} />
-          <InfoRow label="당월 산정 금액" value="1,245,000원" />
           <InfoRow label="적립률" value="1.0% (50~150만 구간)" />
           <InfoRow label="한도 적용" value="한도 미도달" />
         </View>
