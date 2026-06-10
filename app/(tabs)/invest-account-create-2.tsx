@@ -2,9 +2,17 @@ import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { EMAIL_REGEX } from '@/constants/validation';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { resetInvestAccountFlow, setInvestAccountFlowResult } from '@/hooks/investAccountFlow';
+import {
+  createInvestAccount,
+  CreateInvestAccountResult,
+  LinkInvestAccountResult,
+  linkInvestAccount,
+} from '@/hooks/investApi';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 const initialForm = {
@@ -15,24 +23,91 @@ const initialForm = {
   email: '',
 };
 
+const ACCOUNT_PASSWORD_REGEX = /^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,16}$/;
+
 export default function SecuritiesAccountOpenStep2Screen() {
   const [form, setForm] = useState(initialForm);
   const [isPasswordVisible, setPasswordVisible] = useState(false);
   const [isPasswordConfirmVisible, setPasswordConfirmVisible] = useState(false);
   const [isTermsChecked, setTermsChecked] = useState(false);
   const [isPhoneChecked, setPhoneChecked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [createdAccount, setCreatedAccount] = useState<CreateInvestAccountResult | null>(null);
 
+  useEffect(() => {
+    resetInvestAccountFlow();
+  }, []);
+
+  const isPasswordValid = ACCOUNT_PASSWORD_REGEX.test(form.password.trim());
   const isFormValid = useMemo(() => {
     return (
-      form.phone.trim().length > 0 &&
+      form.phone.trim().length === 11 &&
       form.name.trim().length > 0 &&
-      form.password.trim().length > 0 &&
+      isPasswordValid &&
       form.password === form.passwordConfirm &&
       EMAIL_REGEX.test(form.email.trim()) &&
       isTermsChecked &&
       isPhoneChecked
     );
-  }, [form, isTermsChecked, isPhoneChecked]);
+  }, [form, isPasswordValid, isTermsChecked, isPhoneChecked]);
+
+  const submitLabel = createdAccount ? '계좌 연결하기' : '가입하기';
+
+  const handleSubmit = async () => {
+    if (!isFormValid || isSubmitting) {
+      return;
+    }
+
+    let accountForLink = createdAccount;
+
+    try {
+      setIsSubmitting(true);
+      setErrorMessage('');
+
+      accountForLink =
+        createdAccount ??
+        (await createInvestAccount({
+          phoneNumber: formatPhoneNumber(form.phone),
+          customerName: form.name.trim(),
+          accountPassword: form.password.trim(),
+          accountPasswordConfirm: form.passwordConfirm.trim(),
+          email: form.email.trim(),
+          agreedTerms: ['INVEST_BASIC'],
+        }));
+
+      setCreatedAccount(accountForLink);
+
+      const linkedAccount: LinkInvestAccountResult =
+        accountForLink.investConnectedStatus === 'CONNECTED'
+          ? {
+              investAccountUuid: accountForLink.investAccountUuid,
+              accountNoDisplay: accountForLink.accountNoDisplay,
+              accountStatus: accountForLink.accountStatus,
+              investConnectedStatus: true,
+              linkedAt: accountForLink.openedAt,
+            }
+          : await linkInvestAccount({
+              investAccountUuid: accountForLink.investAccountUuid,
+            });
+
+      setInvestAccountFlowResult(accountForLink, linkedAccount);
+      router.replace('/invest-complete');
+    } catch (error) {
+      if (accountForLink) {
+        setErrorMessage(
+          `계좌는 개설되었지만 연결에 실패했습니다. ${extractApiErrorMessage(
+            error,
+            '다시 시도해주세요.',
+          )}`,
+        );
+      } else {
+        setErrorMessage(extractApiErrorMessage(error, '증권 계좌 개설 중 문제가 발생했습니다.'));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -53,12 +128,12 @@ export default function SecuritiesAccountOpenStep2Screen() {
               value={form.phone}
               onChangeText={(text) => {
                 setPhoneChecked(false);
-                setForm((prev) => ({ ...prev, phone: text.replace(/\D/g, '') }));
+                setForm((prev) => ({ ...prev, phone: text.replace(/\D/g, '').slice(0, 11) }));
               }}
             />
             <Pressable
               style={[styles.checkButton, isPhoneChecked && styles.checkButtonDone]}
-              onPress={() => setPhoneChecked(form.phone.trim().length > 0)}
+              onPress={() => setPhoneChecked(form.phone.trim().length === 11)}
             >
               <Text style={[styles.checkButtonText, isPhoneChecked && styles.checkButtonDoneText]}>
                 {isPhoneChecked ? '확인됨' : '중복 확인'}
@@ -75,7 +150,7 @@ export default function SecuritiesAccountOpenStep2Screen() {
 
           <PasswordField
             label="비밀번호 *"
-            placeholder="영문+숫자+특수문자 포함 8~16자"
+            placeholder="숫자+특수문자 포함 8~16자"
             value={form.password}
             visible={isPasswordVisible}
             onToggleVisible={() => setPasswordVisible((prev) => !prev)}
@@ -107,12 +182,14 @@ export default function SecuritiesAccountOpenStep2Screen() {
           </View>
           <Text style={styles.termsText}>약관 동의</Text>
         </Pressable>
+        
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
         <View style={styles.footerSpacing} />
         <AuthButton
-          title="가입하기"
-          disabled={!isFormValid}
-          onPress={() => router.push('/invest-complete')}
+          title={isSubmitting ? '처리 중...' : submitLabel}
+          disabled={!isFormValid || isSubmitting}
+          onPress={handleSubmit}
           variant="blue300"
           style={isFormValid ? styles.submitButtonActive : styles.submitButtonInactive}
           textStyle={isFormValid ? styles.submitButtonTextActive : styles.submitButtonTextInactive}
@@ -177,6 +254,16 @@ function PasswordField({
       </View>
     </View>
   );
+}
+
+function formatPhoneNumber(value: string) {
+  const digits = value.replace(/\D/g, '');
+
+  if (digits.length !== 11) {
+    return value;
+  }
+
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
 const styles = StyleSheet.create({
@@ -314,6 +401,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: AuthColors.textBlack,
   },
+  termsHint: {
+    marginTop: 10,
+    fontSize: 12,
+    color: AuthColors.textGray,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 13,
+    lineHeight: 20,
+    color: AuthColors.error,
+  },
   footerSpacing: {
     height: 30,
   },
@@ -321,12 +419,12 @@ const styles = StyleSheet.create({
     backgroundColor: AuthColors.blue300,
   },
   submitButtonInactive: {
-    backgroundColor: AuthColors.gray50,
+    backgroundColor: AuthColors.lightBg,
   },
   submitButtonTextActive: {
     color: AuthColors.white,
   },
   submitButtonTextInactive: {
-    color: AuthColors.gray700,
+    color: AuthColors.textDarkGray,
   },
 });
