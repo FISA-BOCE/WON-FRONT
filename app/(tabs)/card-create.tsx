@@ -6,20 +6,25 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
+import { resetCardApplicationDraft } from '@/hooks/cardApplicationFlow';
 
 export default function CardCreateScreen() {
+  const handleStart = () => {
+    resetCardApplicationDraft();
+    router.push('/card-application');
+  };
+
   return (
     <View style={styles.container}>
       <TopBar title="카드 생성" onBackPress={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>카드명 넣기</Text>
+        <Text style={styles.title}>클엔의 정석</Text>
         <Text style={styles.subtitle}>결제할수록 ETF가 쌓이는 새로운 카드</Text>
 
         <View style={styles.cardPreview}>
           <View style={styles.cardChip} />
           <Text style={styles.previewCardName}>WON 자동투자 카드</Text>
-          <Text style={styles.previewCardNumber}>**** **** **** 1234</Text>
           <Text style={styles.previewCardSub}>VISA Platinum</Text>
         </View>
 
@@ -46,7 +51,7 @@ export default function CardCreateScreen() {
         </View>
 
         <View style={styles.bottomGap} />
-        <AuthButton title="다음" onPress={() => router.push('./card-application' as never)} />
+        <AuthButton title="확인" onPress={handleStart} />
       </ScrollView>
     </View>
   );
@@ -75,7 +80,7 @@ const styles = StyleSheet.create({
   },
   cardPreview: {
     marginTop: AuthSpacing.default,
-    height: 200,
+    height: 172,
     borderRadius: 18,
     backgroundColor: AuthColors.blue300,
     padding: 24,
@@ -91,12 +96,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: AuthColors.white,
     marginBottom: 12,
-  },
-  previewCardNumber: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: AuthColors.white,
-    marginBottom: 8,
   },
   previewCardSub: {
     fontSize: 11,
