@@ -19,7 +19,10 @@ export async function getMyUser() {
 }
 
 export async function updateMyUser(payload: UpdateUserPayload) {
-  await apiClient.patch<ApiResponse<null>>('/api/users/me', payload);
+  await apiClient.patch<ApiResponse<null>, { data: ApiResponse<null> }, UpdateUserPayload>(
+    '/api/users/me',
+    payload,
+  );
 }
 
 export async function withdrawUser() {
@@ -29,9 +32,10 @@ export async function withdrawUser() {
     throw new Error('로그인 정보가 없습니다.');
   }
 
-  await apiClient.post<ApiResponse<null>>('/api/users/me/withdraw', {
-    refreshToken,
-  });
+  await apiClient.post<ApiResponse<null>, { data: ApiResponse<null> }, { refreshToken: string }>(
+    '/api/users/me/withdraw',
+    { refreshToken },
+  );
 
   await clearAuthTokens();
 }

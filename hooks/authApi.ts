@@ -1,13 +1,18 @@
 import { ApiResponse, apiClient } from '@/hooks/apiClient';
 import { clearAuthTokens, getRefreshToken, saveAuthTokens } from '@/hooks/authStorage';
 
-interface LoginResponse {
+interface CreateLoginRequest {
+  userId: string;
+  userPw: string;
+}
+
+interface CreateLoginResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
 }
 
-interface SignupPayload {
+export interface SignupPayload {
   phoneNumber: string;
   userName: string;
   password: string;
@@ -17,18 +22,24 @@ interface SignupPayload {
 }
 
 export async function signup(payload: SignupPayload) {
-  await apiClient.post<ApiResponse<null>>('/api/auth/signup', {
+  const requestBody = {
     ...payload,
     passwordConfirmed: payload.password === payload.passwordConfirm,
     termsAgreedAccepted: payload.termsAgreed,
-  });
+  };
+
+  await apiClient.post<ApiResponse<null>, { data: ApiResponse<null> }, typeof requestBody>(
+    '/api/auth/signup',
+    requestBody,
+  );
 }
 
 export async function login(userId: string, userPw: string) {
-  const response = await apiClient.post<ApiResponse<LoginResponse>>('/api/auth/login', {
-    userId,
-    userPw,
-  });
+  const requestBody: CreateLoginRequest = { userId, userPw };
+  const response = await apiClient.post<ApiResponse<CreateLoginResponse>, { data: ApiResponse<CreateLoginResponse> }, CreateLoginRequest>(
+    '/api/auth/login',
+    requestBody,
+  );
 
   await saveAuthTokens(response.data.data);
 }
@@ -41,9 +52,10 @@ export async function logout() {
     return;
   }
 
-  await apiClient.post<ApiResponse<null>>('/api/auth/logout', {
-    refreshToken,
-  });
+  await apiClient.post<ApiResponse<null>, { data: ApiResponse<null> }, { refreshToken: string }>(
+    '/api/auth/logout',
+    { refreshToken },
+  );
 
   await clearAuthTokens();
 }
