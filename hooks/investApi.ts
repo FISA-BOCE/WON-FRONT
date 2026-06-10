@@ -22,6 +22,60 @@ interface InvestEtfProductListResponse {
   etfs: InvestEtfSummary[];
 }
 
+export interface InvestMainAccount {
+  investAccountUuid: string;
+  accountNoDisplay: string;
+  accountStatus: string;
+}
+
+export interface InvestMainCashBalance {
+  krwAmount: number;
+  krwStatus: string;
+  usdAmount: number;
+  usdKrwAmount: number;
+}
+
+export interface InvestMainRecentPayment {
+  etfName: string;
+  ticker: string;
+  holdingQuantity: number;
+  evaluationAmount: number;
+}
+
+export interface InvestAutoInvestExecutionHistoryItem {
+  sweepExecutionId: number;
+  orderId: number;
+  etfId: number;
+  etfName: string;
+  ticker: string;
+  executionStatus: string;
+  requestedKrwAmount: number;
+  orderedQuantity: number;
+  executedQuantity: number;
+  averageExecutionPrice: number;
+  executedAmount: number;
+  requestedAt: string;
+  executedAt: string;
+  failureCode?: string;
+  failureMessage?: string;
+}
+
+export interface InvestAutoInvestExecutionHistoryResult {
+  baseDateTime: string;
+  histories: InvestAutoInvestExecutionHistoryItem[];
+  nextCursor?: string;
+  hasNext: boolean;
+}
+
+export interface InvestMainResult {
+  totalEvaluationAmount: number;
+  profitLossAmount: number;
+  profitLossRate: number;
+  account: InvestMainAccount;
+  cashBalance: InvestMainCashBalance;
+  recentPayments: InvestMainRecentPayment[];
+}
+
 export interface CreateInvestAccountPayload {
   phoneNumber: string;
   customerName: string;
@@ -80,6 +134,20 @@ export async function getInvestEtfs() {
   );
 
   return response.data.data.etfs;
+}
+
+export async function getInvestMain() {
+  const response = await investApiClient.get<ApiResponse<InvestMainResult>>('/api/invest/main');
+
+  return response.data.data;
+}
+
+export async function getAutoInvestExecutionHistories(accountUuid: string) {
+  const response = await investApiClient.get<ApiResponse<InvestAutoInvestExecutionHistoryResult>>(
+    `/api/invest/accounts/${accountUuid}/auto-invest/executions`,
+  );
+
+  return response.data.data;
 }
 
 export async function createInvestAccount(payload: CreateInvestAccountPayload) {
