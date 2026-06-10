@@ -31,7 +31,7 @@ export default function CardHomeEmptyScreen() {
         <View style={styles.productCard}>
           <View style={styles.productRow}>
             <View style={styles.productTextWrap}>
-              <Text style={styles.productTitle}>카드명 넣기</Text>
+              <Text style={styles.productTitle}>클엔의 정석</Text>
               <View style={styles.productMetaRow}>
                 <View style={styles.rateBadge}>
                   <Text style={styles.rateBadgeText}>0.7~1.2%</Text>
@@ -44,10 +44,6 @@ export default function CardHomeEmptyScreen() {
               <Text style={styles.applyButtonText}>신청하기</Text>
             </Pressable>
           </View>
-
-          <Text style={styles.productDescription}>
-            설명설명설명{'\n'}설명설명설명{'\n'}설명설명설명
-          </Text>
         </View>
 
         <Text style={styles.sectionTitle}>카드 혜택 미리보기</Text>
@@ -103,21 +99,21 @@ const styles = StyleSheet.create({
     marginTop: 60,
     borderRadius: 16,
     backgroundColor: AuthColors.blue300,
-    paddingHorizontal: 24,
-    paddingVertical: 22,
+    paddingHorizontal: 22,
+    paddingVertical: 18,
   },
   productRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 16,
+    gap: 12,
   },
   productTextWrap: {
     flex: 1,
   },
   productTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: AuthColors.white,
     lineHeight: 38,
   },
