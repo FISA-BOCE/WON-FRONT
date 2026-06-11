@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
+import { Redirect, Stack, usePathname, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -27,7 +27,6 @@ function RootLayoutContent() {
   const [fontsLoaded] = useFonts({});
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const segments = useSegments();
   const pathname = usePathname();
   const [isAuthResolved, setIsAuthResolved] = useState(false);
@@ -54,32 +53,23 @@ function RootLayoutContent() {
     };
   }, [pathname]);
 
-  useEffect(() => {
-    if (!isAuthResolved) {
-      return;
-    }
-
-    const currentGroup = segments[0];
-    const currentLeaf = segments[segments.length - 1];
-    const isAuthRoute = currentGroup === '(auth)';
-    const isTabsRoute = currentGroup === '(tabs)';
-    const isAllowedUnauthRoute = currentLeaf === 'login' || currentLeaf === 'signup' || currentLeaf === 'signup-complete';
-
-    if (!hasToken) {
-      if (isTabsRoute || (isAuthRoute && !isAllowedUnauthRoute)) {
-        router.replace('/(auth)/login');
-      }
-
-      return;
-    }
-
-    if (isAuthRoute || pathname === '/') {
-      router.replace('/(tabs)/card');
-    }
-  }, [hasToken, isAuthResolved, pathname, router, segments]);
-
   if (!fontsLoaded) return null;
   if (!isAuthResolved) return null;
+
+  const currentGroup = segments[0];
+  const currentLeaf = segments[segments.length - 1];
+  const isAuthRoute = currentGroup === '(auth)';
+  const isTabsRoute = currentGroup === '(tabs)';
+  const isAllowedUnauthRoute =
+    currentLeaf === 'login' || currentLeaf === 'signup' || currentLeaf === 'signup-complete';
+
+  if (!hasToken && (isTabsRoute || (isAuthRoute && !isAllowedUnauthRoute))) {
+    return <Redirect href="/login" />;
+  }
+
+  if (hasToken && (isAuthRoute || pathname === '/')) {
+    return <Redirect href="/card" />;
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

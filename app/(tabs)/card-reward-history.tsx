@@ -8,6 +8,7 @@ import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { extractApiErrorMessage } from '@/hooks/apiClient';
 import {
   getRewardLedgerOverview,
+  RewardLedgerItem,
   RewardLedgerResponse,
 } from '@/hooks/cardApi';
 
@@ -61,9 +62,17 @@ export default function CardRewardHistoryScreen() {
         return true;
       }
 
-      return mapSweepStatusToFilter(item.sweepStatus) === selectedFilter;
+      return mapRewardItemToFilter(item) === selectedFilter;
     });
   }, [overview?.ledgers, selectedFilter]);
+
+  const earnedAmount = useMemo(() => {
+    const ledgers = overview?.ledgers ?? [];
+
+    return ledgers
+      .filter((item) => mapRewardItemToFilter(item) === '적립')
+      .reduce((sum, item) => sum + item.pointAmount, 0);
+  }, [overview?.ledgers]);
 
   return (
     <View style={styles.container}>
@@ -72,7 +81,7 @@ export default function CardRewardHistoryScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryCaption}>{overview ? `${overview.baseYear}년 누적 적립` : '리워드 누적 적립'}</Text>
-          <Text style={styles.summaryAmount}>{formatWon(overview?.totalAccumulatedAmount ?? 0)}</Text>
+          <Text style={styles.summaryAmount}>{formatWon(earnedAmount)}</Text>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>전체 건수</Text>
@@ -106,8 +115,9 @@ export default function CardRewardHistoryScreen() {
           <View style={styles.listWrap}>
             {filteredRewards.length > 0 ? (
               filteredRewards.map((item) => {
-                const filterStatus = mapSweepStatusToFilter(item.sweepStatus);
-                const statusLabel = mapSweepStatusLabel(item.sweepStatus);
+                const filterStatus = mapRewardItemToFilter(item);
+                const statusLabel = mapRewardItemToLabel(item);
+                const isProcessingStatus = statusLabel === '처리 중';
 
                 return (
                   <Pressable
@@ -116,7 +126,13 @@ export default function CardRewardHistoryScreen() {
                     onPress={() =>
                       router.push({
                         pathname: '/card-reward-detail',
-                        params: { id: String(item.pointLedgerId) },
+                        params: {
+                          id: String(item.pointLedgerId),
+                          baseMonth: item.baseMonth,
+                          pointAmount: String(item.pointAmount),
+                          type: item.type,
+                          sweepStatus: item.sweepStatus,
+                        },
                       })
                     }
                   >
@@ -125,12 +141,12 @@ export default function CardRewardHistoryScreen() {
                       <Text style={styles.listAmount}>{formatWon(item.pointAmount)}</Text>
                     </View>
                     <View style={styles.listBottomRow}>
-                      <Text style={styles.listTicker}>{item.type}</Text>
                       <View
                         style={[
                           styles.statusBadge,
                           filterStatus === '적립' && styles.statusEarned,
                           filterStatus === '미적용' && styles.statusMissed,
+                          isProcessingStatus && styles.statusProcessing,
                         ]}
                       >
                         <Text
@@ -138,6 +154,7 @@ export default function CardRewardHistoryScreen() {
                             styles.statusText,
                             filterStatus === '적립' && styles.statusTextEarned,
                             filterStatus === '미적용' && styles.statusTextMissed,
+                            isProcessingStatus && styles.statusTextProcessing,
                           ]}
                         >
                           {statusLabel}
@@ -161,6 +178,7 @@ export default function CardRewardHistoryScreen() {
 
 function mapSweepStatusToFilter(sweepStatus: string): Exclude<RewardFilter, '전체'> {
   switch (sweepStatus) {
+    case 'EARN':
     case 'COMPLETED':
     case 'SUCCESS':
       return '적립';
@@ -171,17 +189,46 @@ function mapSweepStatusToFilter(sweepStatus: string): Exclude<RewardFilter, '전
 
 function mapSweepStatusLabel(sweepStatus: string) {
   switch (sweepStatus) {
+    case 'EARN':
+      return '적립 완료';
+    case 'NOT_APPLIED':
+      return '조건 미충족';
+    case 'NONE':
+    case 'REQUESTED':
+      return '처리 중';
     case 'COMPLETED':
       return '적립 완료';
     case 'SUCCESS':
       return '적립 성공';
-    case 'REQUESTED':
-      return '처리 중';
     case 'FAILED':
       return '실패';
     default:
       return sweepStatus;
   }
+}
+
+function mapRewardItemToFilter(item: RewardLedgerItem): Exclude<RewardFilter, '전체'> {
+  if (item.type === 'EARN') {
+    return '적립';
+  }
+
+  if (item.type === 'NOT_APPLIED') {
+    return '미적용';
+  }
+
+  return mapSweepStatusToFilter(item.sweepStatus);
+}
+
+function mapRewardItemToLabel(item: RewardLedgerItem) {
+  if (item.type === 'EARN') {
+    return '적립 완료';
+  }
+
+  if (item.type === 'NOT_APPLIED') {
+    return '조건 미충족';
+  }
+
+  return mapSweepStatusLabel(item.sweepStatus);
 }
 
 function formatBaseMonth(value: string) {
@@ -317,12 +364,8 @@ const styles = StyleSheet.create({
   listBottomRow: {
     marginTop: 8,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-  },
-  listTicker: {
-    fontSize: 12,
-    color: AuthColors.textGray,
   },
   statusBadge: {
     borderRadius: 10,
@@ -335,6 +378,9 @@ const styles = StyleSheet.create({
   statusMissed: {
     backgroundColor: 'rgba(255,103,77,0.2)',
   },
+  statusProcessing: {
+    backgroundColor: 'rgba(255, 224, 102, 0.3)',
+  },
   statusText: {
     fontSize: 11,
     fontWeight: '700',
@@ -345,6 +391,9 @@ const styles = StyleSheet.create({
   },
   statusTextMissed: {
     color: AuthColors.error,
+  },
+  statusTextProcessing: {
+    color: '#9a6700',
   },
   emptyCard: {
     borderWidth: 1,

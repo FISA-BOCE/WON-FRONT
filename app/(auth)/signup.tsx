@@ -116,8 +116,7 @@ export default function SignupScreen() {
       setErrors({ ...errors, phoneNumber: '올바른 휴대폰 번호를 입력해주세요' });
       return;
     }
-    
-    console.log('휴대폰 번호 중복확인:', form.phoneNumber);
+
     setPhoneVerified(true);
   };
 
@@ -139,7 +138,7 @@ export default function SignupScreen() {
         email: form.email.trim(),
         termsAgreed: form.agreeToTerms,
       });
-      router.push('/(auth)/signup-complete');
+      router.push('/signup-complete');
     } catch (error) {
       setSubmitError(extractApiErrorMessage(error, '회원가입 중 문제가 발생했습니다.'));
       Alert.alert('회원가입 실패', extractApiErrorMessage(error, '회원가입 중 문제가 발생했습니다.'));

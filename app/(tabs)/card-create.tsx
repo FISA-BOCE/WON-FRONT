@@ -1,17 +1,57 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AuthButton } from '@/components/auth/AuthButton';
 import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing, AuthTypography } from '@/constants/authColors';
 import { resetCardApplicationDraft } from '@/hooks/cardApplicationFlow';
+import { extractApiErrorMessage } from '@/hooks/apiClient';
+import { getCardInfo } from '@/hooks/cardApi';
 
 export default function CardCreateScreen() {
+  const [hasIssuedCard, setHasIssuedCard] = useState(false);
+  const [isCheckingCard, setIsCheckingCard] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      const loadCardInfo = async () => {
+        try {
+          setIsCheckingCard(true);
+          setErrorMessage('');
+
+          const cards = await getCardInfo();
+
+          if (isMounted) {
+            setHasIssuedCard(cards.length > 0);
+          }
+        } catch (error) {
+          if (isMounted) {
+            setErrorMessage(extractApiErrorMessage(error, '카드 정보를 확인하지 못했습니다.'));
+          }
+        } finally {
+          if (isMounted) {
+            setIsCheckingCard(false);
+          }
+        }
+      };
+
+      void loadCardInfo();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
+
   const handleStart = () => {
     resetCardApplicationDraft();
-    router.push('/(tabs)/card-application');
+    router.push('/card-application');
   };
 
   return (
@@ -51,7 +91,15 @@ export default function CardCreateScreen() {
         </View>
 
         <View style={styles.bottomGap} />
-        <AuthButton title="확인" onPress={handleStart} />
+        {isCheckingCard ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={AuthColors.blue300} />
+          </View>
+        ) : !hasIssuedCard ? (
+          <AuthButton title="확인" onPress={handleStart} />
+        ) : null}
+
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
       </ScrollView>
     </View>
   );
@@ -156,5 +204,16 @@ const styles = StyleSheet.create({
   },
   bottomGap: {
     height: 20,
+  },
+  loadingWrap: {
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 12,
+    color: AuthColors.error,
+    textAlign: 'center',
   },
 });

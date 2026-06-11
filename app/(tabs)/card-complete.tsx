@@ -79,7 +79,7 @@ export default function CardCompleteScreen() {
 
   const handleReset = () => {
     resetCardApplicationDraft();
-    router.replace('/(tabs)/card');
+    router.replace('/card');
   };
 
   const canShowSummary = Boolean(result && selectedAccount);
@@ -97,7 +97,7 @@ export default function CardCompleteScreen() {
         ) : errorMessage ? (
           <View style={styles.loadingWrap}>
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <AuthButton title="이전 단계로 돌아가기" onPress={() => router.replace('/(tabs)/card-etf')} />
+            <AuthButton title="이전 단계로 돌아가기" onPress={() => router.replace('/card-etf')} />
           </View>
         ) : canShowSummary && result && selectedAccount ? (
           <>

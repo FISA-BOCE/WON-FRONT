@@ -216,7 +216,7 @@ export default function ETFReward() {
 
         <View style={styles.historySectionHeader}>
           <Text style={styles.sectionTitle}>ETF 자동 투자 체결 이력</Text>
-          <TouchableOpacity style={styles.viewAllButtonInline} onPress={() => router.push('/(tabs)/etf-change')}>
+          <TouchableOpacity style={styles.viewAllButtonInline} onPress={() => router.push('/etf-change')}>
             <Text style={styles.viewAllText}>변경하기</Text>
           </TouchableOpacity>
         </View>
@@ -325,17 +325,23 @@ const styles = StyleSheet.create({
   },
   currentETFContent: {
     flex: 1,
+    minWidth: 0,
   },
   currentETFTitleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
     marginBottom: 4,
   },
   currentETFName: {
     fontSize: 14,
     fontWeight: '700',
     color: AuthColors.gray900,
+    flexShrink: 1,
+    minWidth: 0,
+    lineHeight: 20,
+    marginRight: 8,
+    marginBottom: 8
   },
   currentETFDate: {
     fontSize: 10,
@@ -347,6 +353,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 999,
     backgroundColor: '#EFF6FF',
+    alignSelf: 'flex-start',
+    marginTop: 4,
   },
   pendingBadgeText: {
     fontSize: 10,

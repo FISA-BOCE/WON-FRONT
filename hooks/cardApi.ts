@@ -100,6 +100,31 @@ export interface RewardLedgerResponse {
   ledgers: RewardLedgerItem[];
 }
 
+export interface MonthlyRewardInfo {
+  baseMonth: string;
+  rewardStatus: string;
+  previousMonthSpendAmount: number;
+  rewardPointAmount: number;
+  rewardRate: number;
+  performanceStatus: number | string;
+}
+
+export interface RewardLedgerDetailInfo {
+  pointLedgerId: number;
+  baseMonth: string;
+  type: string;
+  pointAmount: number;
+  sweepStatus: string;
+  sweepFailureCode?: string;
+  sweepFailureMessage?: string;
+  occurredAt: string;
+  detail: {
+    previousMonthSpendAmount: number;
+    targetSpendAmount: number;
+    shortfallAmount: number;
+  } | null;
+}
+
 export async function getCardApplicationInvestAccounts() {
   try {
     const response = await apiClient.get<ApiResponse<CardApplicationInvestAccountsResponse>>(
@@ -163,6 +188,20 @@ export async function getRewardLedgerOverview(type?: string) {
     {
       params: type ? { type } : undefined,
     },
+  );
+
+  return response.data.data;
+}
+
+export async function getMonthlyReward() {
+  const response = await apiClient.get<ApiResponse<MonthlyRewardInfo>>('/api/cards/rewards/monthly');
+
+  return response.data.data;
+}
+
+export async function getRewardLedgerDetail(pointLedgerId: number) {
+  const response = await apiClient.get<ApiResponse<RewardLedgerDetailInfo>>(
+    `/api/cards/rewards/ledger/${pointLedgerId}`,
   );
 
   return response.data.data;
