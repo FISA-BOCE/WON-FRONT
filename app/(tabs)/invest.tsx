@@ -179,7 +179,7 @@ export default function ExploreScreen() {
             </View>
             <View>
               <Text style={styles.accountTitle}>우리투자증권 증권계좌</Text>
-              <Text style={styles.accountSub}>{account.accountNoDisplay} | 상태 {account.accountStatus}</Text>
+              <Text style={styles.accountSub}>{account.accountNoDisplay}{account.accountStatus}</Text>
             </View>
           </View>
         </View>
