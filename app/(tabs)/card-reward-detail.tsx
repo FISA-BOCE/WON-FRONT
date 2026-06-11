@@ -310,7 +310,7 @@ export default function CardRewardDetailScreen() {
         ) : null}
 
         <View style={styles.bottomGap} />
-        <AuthButton title="확인" onPress={() => router.push('/(tabs)/card-reward-history')} />
+        <AuthButton title="확인" onPress={() => router.push('/card-reward-history')} />
       </ScrollView>
     </View>
   );

@@ -12,7 +12,7 @@ export default function SecuritiesCompleteScreen() {
 
   const handleDone = () => {
     resetInvestAccountFlow();
-    router.replace('/(tabs)/invest');
+    router.replace('/invest');
   };
 
   if (!createResult || !linkResult) {

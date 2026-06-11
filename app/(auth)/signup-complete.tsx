@@ -12,7 +12,7 @@ import {
 
 export default function SignupCompleteScreen() {
   const handleStartPress = () => {
-    router.replace('/(auth)/login');
+    router.replace('/login');
   };
 
   return (

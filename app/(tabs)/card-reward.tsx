@@ -205,7 +205,7 @@ export default function CardRewardScreen() {
         <Text style={styles.footerNote}>매수 체결 결과는 별도로 안내됩니다.</Text>
 
         <View style={styles.buttonWrap}>
-          <AuthButton title="리워드 이력 확인" onPress={() => router.push('/(tabs)/card-reward-history')} />
+          <AuthButton title="리워드 이력 확인" onPress={() => router.push('/card-reward-history')} />
         </View>
       </ScrollView>
     </View>

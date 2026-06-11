@@ -51,7 +51,7 @@ export default function CardCreateScreen() {
 
   const handleStart = () => {
     resetCardApplicationDraft();
-    router.push('/(tabs)/card-application');
+    router.push('/card-application');
   };
 
   return (

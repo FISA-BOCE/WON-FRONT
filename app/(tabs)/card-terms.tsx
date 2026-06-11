@@ -59,7 +59,7 @@ export default function CardTermsScreen() {
       isMarketingSmsAgree: selected.includes(optionalTerms[1]),
     });
 
-    router.push('/(tabs)/card-account');
+    router.push('/card-account');
   };
 
   return (

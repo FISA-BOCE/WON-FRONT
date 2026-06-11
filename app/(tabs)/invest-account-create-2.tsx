@@ -92,7 +92,7 @@ export default function SecuritiesAccountOpenStep2Screen() {
             });
 
       setInvestAccountFlowResult(accountForLink, linkedAccount);
-      router.replace('/(tabs)/invest-complete');
+      router.replace('/invest-complete');
     } catch (error) {
       if (accountForLink) {
         setErrorMessage(

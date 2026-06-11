@@ -4,7 +4,7 @@ import { TopBar } from '@/components/auth/TopBar';
 import { AuthColors, AuthSpacing } from '@/constants/authColors';
 import { extractApiErrorMessage } from '@/hooks/apiClient';
 import { login } from '@/hooks/authApi';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Alert,
@@ -16,10 +16,12 @@ import {
   View,
 } from 'react-native';
 
-export default function LoginScreen({ route }: any) {
-  // Check if coming from login-error (error state mode)
-  const startInErrorState = route?.params?.showError || false;
-  
+export default function LoginScreen() {
+  const { showError } = useLocalSearchParams<{ showError?: string | string[] }>();
+  const startInErrorState = Array.isArray(showError)
+    ? showError[0] === 'true'
+    : showError === 'true';
+
   const [phoneNumber, setPhoneNumber] = useState(startInErrorState ? '01012345678' : '');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +55,7 @@ export default function LoginScreen({ route }: any) {
     try {
       setIsSubmitting(true);
       await login(phoneNumber.trim(), password.trim());
-      router.replace('/(tabs)/card');
+      router.replace('/card');
     } catch (error) {
       Alert.alert('로그인 실패', extractApiErrorMessage(error, '로그인 중 문제가 발생했습니다.'));
     } finally {
@@ -62,7 +64,7 @@ export default function LoginScreen({ route }: any) {
   };
 
   const handleSignupPress = () => {
-    router.push('/(auth)/signup');
+    router.push('/signup');
   };
 
   return (
